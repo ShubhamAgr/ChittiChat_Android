@@ -20,31 +20,27 @@ public interface ChittichatServices {
     //Login Related Urls...
 
     @POST("loginWithFacebook")
-    Observable<ResponseMessage> getResponseOnLoginWithFacebook(@Body String facebook_id, @Body String fb_token);
+    Observable<ResponseMessage> getResponseOnLoginWithFacebook(@Body LoginInformation loginInformation);
 
     @POST("loginWithEmail")
-    Observable<ResponseMessage> getResponseOnLoginWithEmail(@Body String email,@Body String password);
+    Observable<ResponseMessage> getResponseOnLoginWithEmail(@Body LoginWithEmailInformation loginWithEmailInformation);
 
     @POST("loginWithUsername")
-    Observable<ResponseMessage> getResponseOnLoginWithUsername(@Body String username,@Body String password);
+    Observable<ResponseMessage> getResponseOnLoginWithUsername(@Body LoginWithUserNameInformation loginWithUserNameInformation);
 
     //Signup Related Urls
 
     @POST("signupWithChittiChat")
-    Observable<ResponseMessage> getResponseOnSignupWithChittiChat(@Body String username,@Body String email,@Body String password);
+    Observable<ResponseMessage> getResponseOnSignupWithChittiChat(@Body SignupWithChittichatInformation signupWithChittichatInformation );
 
     @POST("signupWithFacebook")
-    Observable<ResponseMessage> getResponseOnSignupWithFacebook(@Body String facebook_id, @Body String firstName, @Body String lastName,@Body
-                                                                String fb_token);
+    Observable<ResponseMessage> getResponseOnSignupWithFacebook(@Body SignupWithFacebookInformation signupWithFacebookInformation);
 
 
     //Groups Related Urls
 
     @POST("/newGroup")
-    Observable<ResponseMessage> getResponseOnNewGroup(@Body String token,@Body String group_name,@Body String group_introduction,@Body String
-            group_category,@Body
-    String
-            knock_knock_question);
+    Observable<ResponseMessage> getResponseOnNewGroup(@Body NewGroupInformation newGroupInformation);
 
     @GET("/groups/{token}")
     Observable<List<GroupsList>> getResponseOnGroups(@Path("token") String token);

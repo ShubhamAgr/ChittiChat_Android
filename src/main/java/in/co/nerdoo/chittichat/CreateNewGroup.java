@@ -60,8 +60,9 @@ public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnI
     }
     private void createnewGroup(String token,String group_name,String group_introduction,String group_category,String knock_knock_question){
         chittichatServices = retrofit.create(ChittichatServices.class);
-        Observable<ResponseMessage> getResponseOnNewGroup = chittichatServices.getResponseOnNewGroup(token,group_name,group_introduction,
+        NewGroupInformation newGroupInformation = new NewGroupInformation(token,group_name,group_introduction,
                 group_category,knock_knock_question);
+        Observable<ResponseMessage> getResponseOnNewGroup = chittichatServices.getResponseOnNewGroup(newGroupInformation);
         getResponseOnNewGroup.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<ResponseMessage>() {
             @Override
             public void onCompleted() {
@@ -81,5 +82,16 @@ public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnI
 
             }
         });
+    }
+}
+class NewGroupInformation{
+    String token;String group_name;String group_introduction;String group_category;String knock_knock_question;
+
+    public NewGroupInformation(String token, String group_name, String group_introduction, String group_category, String knock_knock_question) {
+        this.token = token;
+        this.group_name = group_name;
+        this.group_introduction = group_introduction;
+        this.group_category = group_category;
+        this.knock_knock_question = knock_knock_question;
     }
 }

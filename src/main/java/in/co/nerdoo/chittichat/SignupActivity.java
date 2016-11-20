@@ -9,6 +9,7 @@ import android.widget.Toast;
 import javax.inject.Inject;
 
 import retrofit2.Retrofit;
+import retrofit2.http.Body;
 import rx.Observable;
 import rx.Observer;
 import rx.android.schedulers.AndroidSchedulers;
@@ -37,7 +38,8 @@ public class SignupActivity extends AppCompatActivity {
     }
 
     private  void signupWithChittichat(final String username,final String email,final String password){
-        Observable<ResponseMessage> signupWithChittichat = chittichatServices.getResponseOnSignupWithChittiChat(username,email,password);
+        SignupWithChittichatInformation signupWithChittichatInformation = new SignupWithChittichatInformation(username,email,password);
+        Observable<ResponseMessage> signupWithChittichat = chittichatServices.getResponseOnSignupWithChittiChat(signupWithChittichatInformation);
         signupWithChittichat.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<ResponseMessage>() {
             @Override
             public void onCompleted() {
@@ -66,5 +68,16 @@ public class SignupActivity extends AppCompatActivity {
         }else {
             Toast.makeText(getApplicationContext(),"password does not matched",Toast.LENGTH_SHORT).show();
         }
+    }
+}
+
+class SignupWithChittichatInformation{
+    String username;
+    String email;
+    String password;
+    SignupWithChittichatInformation(String username,String email,String password){
+        this.username =username;
+        this.email = email;
+        this.password = password;
     }
 }

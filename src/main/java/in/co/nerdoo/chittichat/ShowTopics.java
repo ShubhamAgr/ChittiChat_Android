@@ -8,6 +8,7 @@ import android.util.Log;
 import javax.inject.Inject;
 
 import retrofit2.Retrofit;
+import retrofit2.http.Body;
 import rx.Observable;
 import rx.Observer;
 import rx.Subscription;
@@ -63,7 +64,8 @@ public class ShowTopics extends AppCompatActivity {
         });
     }
     private static void createNewTopic(final  String token,final String groupId,final String topicTitle,final String topicDescription) {
-        Observable<ResponseMessage> getOnNewTopicResponse = chittichatServices.getResponseOnNewTopic(token,groupId,topicTitle,topicDescription);
+        NewTopicInformation newTopicInformation = new NewTopicInformation(token,groupId,topicTitle,topicDescription);
+        Observable<ResponseMessage> getOnNewTopicResponse = chittichatServices.getResponseOnNewTopic(newTopicInformation);
         subscription_second = getOnNewTopicResponse.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new
                                                                                                                                               Observer<ResponseMessage>() {
             @Override
@@ -82,5 +84,16 @@ public class ShowTopics extends AppCompatActivity {
             }
         });
 
+    }
+}
+
+class NewTopicInformation{
+    String token,groupId,topicTitle, topicDescription;
+
+    public NewTopicInformation(String token, String groupId, String topicTitle, String topicDescription) {
+        this.token = token;
+        this.groupId = groupId;
+        this.topicTitle = topicTitle;
+        this.topicDescription = topicDescription;
     }
 }

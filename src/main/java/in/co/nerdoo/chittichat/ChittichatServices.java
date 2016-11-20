@@ -74,7 +74,7 @@ public interface ChittichatServices {
 
 
     @POST("newTopic")
-    Observable<ResponseMessage> getResponseOnNewTopic(@Body String token,@Body String groupId,@Body String topicTitle,@Body String topicDescription);
+    Observable<ResponseMessage> getResponseOnNewTopic(@Body NewTopicInformation newTopicInformation);
 
     @GET("allTopics/{token}/{groupId}")
     Observable<ResponseMessage> getResponseOnAllTopics(@Path("token") String token, @Path("groupId") String groupId);
@@ -89,7 +89,7 @@ public interface ChittichatServices {
     // range Param
 
     @POST("article")
-    Observable<ResponseMessage> getResponseOnPostArticle(@Body String token,@Body String topicId,@Body String article);
+    Observable<ResponseMessage> getResponseOnPostArticle(@Body ArticleInformation articleInformation);
 
     @Multipart
     @POST("image")

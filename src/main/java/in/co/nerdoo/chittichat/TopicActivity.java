@@ -15,6 +15,7 @@ import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 import retrofit2.Retrofit;
+import retrofit2.http.Body;
 import rx.Observable;
 import rx.Observer;
 import rx.android.schedulers.AndroidSchedulers;
@@ -70,7 +71,8 @@ public class TopicActivity extends AppCompatActivity {
 
 
     private void postArticle(final String article){
-    Observable<ResponseMessage> getResponseOnArticleUpload = chittichatServices.getResponseOnPostArticle(token,topicId,article);
+        ArticleInformation articleInformation = new ArticleInformation(token,topicId,article);
+        Observable<ResponseMessage> getResponseOnArticleUpload = chittichatServices.getResponseOnPostArticle(articleInformation);
         getResponseOnArticleUpload.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<ResponseMessage>() {
             @Override
             public void onCompleted() {
@@ -202,4 +204,14 @@ public class TopicActivity extends AppCompatActivity {
     }
 
 
+}
+
+class  ArticleInformation{
+    String token,topicId,article;
+
+    public ArticleInformation(String token, String topicId, String article) {
+        this.token = token;
+        this.topicId = topicId;
+        this.article = article;
+    }
 }

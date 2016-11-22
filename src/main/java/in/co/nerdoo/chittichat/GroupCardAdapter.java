@@ -38,8 +38,8 @@ public class GroupCardAdapter extends RecyclerView.Adapter<GroupCardAdapter.View
         }
         @Override
         public void onClick(final View v) {
-            Intent intent = new Intent(viewContext,TopicActivity.class);
-            intent.putExtra("groupId",mDataset.get(getPosition()).getGroupId());
+            Intent intent = new Intent(viewContext,ShowTopics.class);
+            intent.putExtra("groupId",mDataset.get(getPosition()).get_id());
             viewContext.startActivity(intent);
         }
 
@@ -78,11 +78,10 @@ public class GroupCardAdapter extends RecyclerView.Adapter<GroupCardAdapter.View
         JSONObject jsonObject = null;
         try{
 
-            String groupId = mDataset.get(position).getGroupId();
-            jsonObject = (JSONObject) properties.get(groupId);
-            Picasso.with(group_profile_context).load(jsonObject.getString("group_profile_url")).into(holder.group_profile_pic);
-            holder.group_notification.setText(jsonObject.getString("group_notification"));
-            holder.group_title.setText(jsonObject.getString("group_name"));
+            String groupId = mDataset.get(position).get_id();
+            Picasso.with(group_profile_context).load((String)properties.get(groupId+"pic_url")).into(holder.group_profile_pic);
+            holder.group_notification.setText(((String)properties.get(groupId+"motivation")));//properties.get(mDataset.get(position).get_id())));
+            holder.group_title.setText((String)properties.get(groupId+"name"));
 
         }catch (Exception e){
             Log.e("GroupCardAdapterEx:",e.getMessage());

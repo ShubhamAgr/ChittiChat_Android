@@ -43,6 +43,7 @@
     import java.util.List;
     import java.util.Locale;
     import java.util.Map;
+    import java.util.concurrent.ExecutionException;
     import java.util.concurrent.TimeUnit;
 
     import javax.inject.Inject;
@@ -56,6 +57,7 @@
     import rx.Subscription;
     import rx.android.schedulers.AndroidSchedulers;
     import rx.schedulers.Schedulers;
+
 
     public class FirstActivity extends AppCompatActivity implements ConnectivityReciever.ConnectivityReceiverListener {
         @Inject
@@ -82,6 +84,7 @@
         private Subscription subscription;
         ActionBar actionBar;
 
+        private static GroupDetail newgroupDetail;
         @Override
         protected void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
@@ -134,18 +137,21 @@
                 @Override
                 public void onCompleted() {
                     Log.d("Response","completed");
+
                     subscription.unsubscribe();
                 }
                 @Override
                 public void onError(Throwable e) {
-                    Log.e("Response",e.getMessage().toString());
+                    Log.e("Response",e.getMessage());
                 }
                 @Override
                 public void onNext(final List<GroupsList> groupsLists) {
+                   Log.d("abcd",groupsLists.get(0).get_id()) ;
                     FirstActivity.groupsList = groupsLists;
-                    Iterator<GroupsList> it = groupsLists.listIterator();
-                    Map<String,Object> properties  = new HashMap<String, Object>();
-                    properties.put("groupsList",groupsLists);
+//                    FirstActivity.groupsList = groupsLists;
+//                    Iterator<GroupsList> it = groupsLists.listIterator();
+//                    Map<String,List<GroupsList>> properties  = new HashMap<>();
+//                    properties.put("groupsList",groupsLists);
                     try {
                         groupDocument.update(new Document.DocumentUpdater() {
                             @Override
@@ -159,21 +165,23 @@
                     } catch (CouchbaseLiteException e) {
                         e.printStackTrace();
                     }
-
-                    while (it.hasNext()){
-                        JSONObject joinRoomrequest = new JSONObject();
-                        try {
-                            String groupId =it.next().getGroupId();
-                            getGroupDetails(groupId);
-                            joinRoomrequest.put("room_id",groupId);
-                            socket.emit("joinRoom",joinRoomrequest) ;
-                        } catch (JSONException e) {
-                            e.printStackTrace();
+                    for(int i = 0; i< groupsLists.size();i++){
+                        JSONObject joinRoom = new JSONObject();
+                        try{
+                            joinRoom.put("room_id",groupsLists.get(i).get_id());
+                            socket.emit("joinRoom",joinRoom);
+                        }catch (JSONException e){
+                            Log.e("problem",e.getMessage());
                         }
+                        getGroupDetails(groupsLists.get(i).get_id());
                     }
-
                     GroupCardAdapter groupCardAdapter = new GroupCardAdapter(getApplicationContext(),groupDocument,groupsLists);
                     recyclerView.setAdapter(groupCardAdapter);
+
+
+
+
+
                 }
             });
 
@@ -202,48 +210,43 @@
                  default:
                      Toast.makeText(getApplicationContext(),"Does not match any options",Toast.LENGTH_SHORT).show();
              }
-            //noinspection SimplifiableIfStatement
-//            if (id == R.id.action_settings) {
-//                startActivity(new Intent(FirstActivity.this,SettingsActivity.class));
-//                return true;
-//            }
-
             return super.onOptionsItemSelected(item);
         }
-        private  void getGroupDetails(String groupId) {
-            Observable<GroupDetail> getGroupDetails = chittichatServices.getResponseOnGroupDetail(groupId);
+        private  void getGroupDetails(final String groupId) {
+            Log.d("cccc",groupId);
+            Observable<GroupDetail> getGroupDetails = chittichatServices.getResponseOnGroupDetail(sharedPreferences.getString("ChittiChat_token",
+                    ""),groupId);
             getGroupDetails.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<GroupDetail>() {
                 @Override
                 public void onCompleted() {
-                    
+                    Log.d("message","Information fetched");
                 }
 
                 @Override
                 public void onError(Throwable e) {
-
+                    Log.e("Error",e.getMessage().toString());
+                    e.printStackTrace();
                 }
 
                 @Override
-                public void onNext(final GroupDetail groupDetail) {
+                public void onNext(GroupDetail groupDetail) {
                     //add each group detail to the database
+
                     try {
-                        final JSONObject jsonObject = new JSONObject();
-                        jsonObject.put("group_profile_url",groupDetail.getProfilePictures());
-                        jsonObject.put("group_notification",groupDetail.getGroup_about());
-                        jsonObject.put("group_name",groupDetail.getGroupName());
-                        groupDocument.update(new Document.DocumentUpdater() {
-                            @Override
-                            public boolean update(UnsavedRevision newRevision) {
-                                Map<String,Object> properties = newRevision.getProperties();
-                                properties.put(groupDetail.getGroupId(),jsonObject);
-                                newRevision.setProperties(properties);
-                                return true;
-                            }
-                        });
-                    } catch (CouchbaseLiteException e) {
-                        e.printStackTrace();
-                    } catch (JSONException e) {
-                        e.printStackTrace();
+                        Map<String, Object> properties = new HashMap<>();
+                        properties.putAll(groupDocument.getProperties());
+                        properties.put(groupId+"_id",groupDetail.get_id());
+                        properties.put(groupId+"name",groupDetail.getName());
+                        properties.put(groupId+"motivation",groupDetail.getAbout());
+                        properties.put(groupId+"pic_url",groupDetail.getPic_url());
+                        try {
+                            groupDocument.putProperties(properties);
+                        } catch (CouchbaseLiteException e) {
+                            e.printStackTrace();
+                        }
+                    }catch (Exception e) {
+                        Log.e("ERROR2",e.getMessage().toString());
+//                        e.printStackTrace();
                     }
                 }
             });
@@ -279,16 +282,16 @@
         @Override
         protected void onDestroy() {
             super.onDestroy();
-//            Iterator<GroupsList> it = groupsList.listIterator();
-//            while (it.hasNext()){
-//                JSONObject joinRoomrequest = new JSONObject();
-//                try {
-//                    joinRoomrequest.put("room_id",it.next().getGroupId().toString());
-//                    socket.emit("leaveRoom",joinRoomrequest) ;
-//                } catch (JSONException e) {
-//                    e.printStackTrace();
-//                }
-//            }
+            Iterator<GroupsList> it = groupsList.listIterator();
+            while (it.hasNext()){
+                JSONObject joinRoomrequest = new JSONObject();
+                try {
+                    joinRoomrequest.put("room_id",it.next().get_id().toString());
+                    socket.emit("leaveRoom",joinRoomrequest) ;
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
         }
 
 
@@ -303,7 +306,7 @@
         }
 
         private void createContent(){
-            Map<String,Object> map = new HashMap<String,Object>();
+            Map<String,Object> map = new HashMap<>();
             map.put("ss1","Sssss");
             try {
                 document_one.putProperties(map);
@@ -386,7 +389,7 @@
         private void initCollapsingToolbar() {
             final CollapsingToolbarLayout collapsingToolbar =
                     (CollapsingToolbarLayout) findViewById(R.id.toolbar_layout);
-            collapsingToolbar.setTitle("Shubham");//setTo user name or First name.....
+//            collapsingToolbar.setTitle("Shubham");//setTo user name or First name.....
 
 
             AppBarLayout appBarLayout = (AppBarLayout) findViewById(R.id.app_bar);
@@ -402,6 +405,7 @@
                     if (scrollRange == -1) {
                         scrollRange = appBarLayout.getTotalScrollRange();
                         actionBar.hide();
+                        collapsingToolbar.setTitle("Shubham");
                     }
                     if (scrollRange + verticalOffset == 0) {
                         collapsingToolbar.setTitle(getString(R.string.app_name));

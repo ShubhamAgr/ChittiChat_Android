@@ -13,7 +13,8 @@ public interface MainAppComponent {
     void inject(LoginActivity loginActivity);
     void inject(FirstActivity firstActivity);
     void inject(TopicActivity topicActivity);
+    void inject(SignupDialog signupDialog);
     void inject(ShowTopics showTopics);
+    void inject(newTopicDialog newTopicDialog);
     void inject(CreateNewGroup createNewGroup);
-    void inject(SignupActivity signupActivity);
 }

@@ -31,32 +31,12 @@ public class SignupActivity extends AppCompatActivity {
         email =  (EditText) findViewById(R.id.signup_email);
         password = (EditText) findViewById(R.id.signup_password);
         confirm_password = (EditText) findViewById(R.id.signup_confirm_password);
-        ((ChittichatApp) getApplication()).getMainAppComponent().inject(this);
 
 
         chittichatServices = retrofit.create(ChittichatServices.class);
     }
 
-    private  void signupWithChittichat(final String username,final String email,final String password){
-        SignupWithChittichatInformation signupWithChittichatInformation = new SignupWithChittichatInformation(username,email,password);
-        Observable<ResponseMessage> signupWithChittichat = chittichatServices.getResponseOnSignupWithChittiChat(signupWithChittichatInformation);
-        signupWithChittichat.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<ResponseMessage>() {
-            @Override
-            public void onCompleted() {
 
-            }
-
-            @Override
-            public void onError(Throwable e) {
-
-            }
-
-            @Override
-            public void onNext(ResponseMessage responseMessage) {
-
-            }
-        });
-    }
 
     public void onClickSignup(View view){
         String usernametext  = username.getText().toString();
@@ -64,20 +44,11 @@ public class SignupActivity extends AppCompatActivity {
         String passwordtext = password.getText().toString();
         String confirmPasswordText = confirm_password.getText().toString();
         if(passwordtext.equals(confirmPasswordText)){
-            signupWithChittichat(usernametext,emailtext,passwordtext);
+//            signupWithChittichat(usernametext,emailtext,passwordtext);
         }else {
             Toast.makeText(getApplicationContext(),"password does not matched",Toast.LENGTH_SHORT).show();
         }
     }
 }
 
-class SignupWithChittichatInformation{
-    String username;
-    String email;
-    String password;
-    SignupWithChittichatInformation(String username,String email,String password){
-        this.username =username;
-        this.email = email;
-        this.password = password;
-    }
-}
+

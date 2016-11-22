@@ -4,33 +4,22 @@ package in.co.nerdoo.chittichat;
  * Created by shubham on 16/10/16.
  */
 public class GroupsList {
-    private String GroupId;
-    private String UserRole;
-//    private String groupName;
-//    private String groupProfilePicture;
+    private String _id;
+    private String role;
 
-    public String getGroupImageUrl() {
-        return GroupImageUrl;
+    public String get_id() {
+        return _id;
     }
 
-    public void setGroupImageUrl(String groupImageUrl) {
-        GroupImageUrl = groupImageUrl;
+    public void set_id(String _id) {
+        this._id = _id;
     }
 
-    private String GroupImageUrl;
-    public String getUserRole() {
-        return UserRole;
+    public String getRole() {
+        return role;
     }
 
-    public void setUserRole(String userRole) {
-        UserRole = userRole;
-    }
-
-    public String getGroupId() {
-        return GroupId;
-    }
-
-    public void setGroupId(String groupId) {
-        GroupId = groupId;
+    public void setRole(String role) {
+        this.role = role;
     }
 }

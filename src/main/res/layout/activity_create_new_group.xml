@@ -38,7 +38,7 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:foregroundGravity="center"
-        android:paddingLeft="150dp"
+        android:paddingLeft="100dp"
         android:id="@+id/group_category_spinner"
         android:layout_centerVertical="true"
         android:layout_alignParentLeft="true"
@@ -50,6 +50,7 @@
         android:layout_height="wrap_content"
         android:text="create new Group"
         android:id="@+id/new_group"
+        android:onClick="onClickcreateNewGroup"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="false"
@@ -58,36 +59,51 @@
         android:layout_alignParentTop="false"
         android:layout_alignParentLeft="false"/>
 
-    <Button
-        android:layout_width="match_parent"
+    <!--<Button-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:gravity="center"-->
+        <!--android:text="SelectGroupImage"-->
+        <!--android:id="@+id/SelectgroupImage"-->
+        <!--android:layout_below="@+id/group_category_spinner"-->
+        <!--android:layout_alignParentLeft="true"-->
+        <!--android:layout_alignParentStart="true"-->
+        <!--android:layout_alignRight="@+id/group_category_spinner"-->
+        <!--android:layout_alignEnd="@+id/group_category_spinner"-->
+        <!--android:background="#9f5353"-->
+        <!--android:backgroundTint="#827575"-->
+        <!--android:clickable="true"-->
+        <!--android:textStyle="bold"-->
+        <!--android:layout_alignParentRight="false"-->
+        <!--android:layout_alignParentTop="false"-->
+        <!--android:layout_above="@+id/new_group"/>-->
+
+    <!--<TextView-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:textAppearance="?android:attr/textAppearanceSmall"-->
+        <!--android:text="Image URI"-->
+        <!--android:gravity="center"-->
+        <!--android:id="@+id/imageUri"-->
+        <!--android:layout_below="@+id/knockKnockQuestion"-->
+        <!--android:layout_alignParentLeft="true"-->
+        <!--android:layout_alignParentStart="true"-->
+        <!--android:layout_alignParentRight="true"-->
+        <!--android:layout_alignParentEnd="true"/>-->
+
+    <EditText
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:inputType="textMultiLine"
+        android:ems="10"
+        android:hint="Knock Knock Question"
         android:gravity="center"
-        android:text="SelectGroupImage"
-        android:id="@+id/SelectgroupImage"
+        android:id="@+id/knockKnockQuestion"
         android:layout_below="@+id/group_category_spinner"
+        android:layout_above="@+id/new_group"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_alignRight="@+id/group_category_spinner"
-        android:layout_alignEnd="@+id/group_category_spinner"
-        android:background="#9f5353"
-        android:backgroundTint="#827575"
-        android:clickable="true"
-        android:textStyle="bold"
-        android:layout_alignParentRight="false"
-        android:layout_alignParentTop="false"
-        android:layout_above="@+id/new_group"/>
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="Image URI"
-        android:gravity="center"
-        android:id="@+id/imageUri"
-        android:layout_below="@+id/SelectgroupImage"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"/>
+        android:layout_alignEnd="@+id/group_category_spinner"/>
 
 </RelativeLayout>

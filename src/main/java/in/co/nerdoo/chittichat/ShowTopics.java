@@ -1,9 +1,18 @@
 package in.co.nerdoo.chittichat;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.DialogFragment;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.widget.Toast;
 
 import javax.inject.Inject;
 
@@ -27,6 +36,12 @@ public class ShowTopics extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_show_topics);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_show_topics);
+        toolbar.setTitle("Topics");
+        toolbar.showOverflowMenu();
+        setSupportActionBar(toolbar);
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         ((ChittichatApp) getApplication()).getMainAppComponent().inject(this);
 
@@ -37,9 +52,38 @@ public class ShowTopics extends AppCompatActivity {
             groupId = null;
         }else{
             groupId = extras.getString("groupId");
-            callTopics(sharedPreferences.getString("ChittiChat_token",null),groupId);
+            SharedPreferences.Editor  editor = sharedPreferences.edit();
+            editor.putString("currentGroupId",groupId);
+            editor.apply();
+//            callTopics(sharedPreferences.getString("ChittiChat_token",null),groupId);
         }
 
+    }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_show_topics, menu);
+        return true;
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+        switch (id){
+            case R.id.action_settings:
+              return true;
+            case R.id.new_topic:
+                Toast.makeText(getApplicationContext(),"abcde",Toast.LENGTH_SHORT).show();
+                DialogFragment dialogFragment = new newTopicDialog();
+                dialogFragment.show(getFragmentManager(),"abcd");
+
+
+                return true;
+            default:
+                Toast.makeText(getApplicationContext(),"Does not match any options",Toast.LENGTH_SHORT).show();
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private static void callTopics(final String token,final String groupId) {
@@ -63,37 +107,5 @@ public class ShowTopics extends AppCompatActivity {
             }
         });
     }
-    private static void createNewTopic(final  String token,final String groupId,final String topicTitle,final String topicDescription) {
-        NewTopicInformation newTopicInformation = new NewTopicInformation(token,groupId,topicTitle,topicDescription);
-        Observable<ResponseMessage> getOnNewTopicResponse = chittichatServices.getResponseOnNewTopic(newTopicInformation);
-        subscription_second = getOnNewTopicResponse.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new
-                                                                                                                                              Observer<ResponseMessage>() {
-            @Override
-            public void onCompleted() {
-                subscription_second.unsubscribe();
-            }
-
-            @Override
-            public void onError(Throwable e) {
-
-            }
-
-            @Override
-            public void onNext(ResponseMessage responseMessage) {
-
-            }
-        });
-
-    }
 }
 
-class NewTopicInformation{
-    String token,groupId,topicTitle, topicDescription;
-
-    public NewTopicInformation(String token, String groupId, String topicTitle, String topicDescription) {
-        this.token = token;
-        this.groupId = groupId;
-        this.topicTitle = topicTitle;
-        this.topicDescription = topicDescription;
-    }
-}

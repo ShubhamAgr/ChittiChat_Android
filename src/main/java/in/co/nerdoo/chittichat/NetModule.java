@@ -105,55 +105,23 @@ public class NetModule {
 
                 }
             });
-            socket.on("newimagenotify",new Emitter.Listener(){
-               @Override
-                public void call(Object... args){
-
-               }
-            });
-            socket.on("newarticlenotify",new Emitter.Listener(){
-                @Override
-                public void call(Object... args){
-
-                }
-            });
-            socket.on("newvideosnotify",new Emitter.Listener(){
-                @Override
-                public void call(Object... args){
-
-                }
-            });
-            socket.on("newaudionotify",new Emitter.Listener(){
-                @Override
-                public void call(Object... args){
-
-                }
-            });
-            socket.on("acceptednotify",new Emitter.Listener(){
-               @Override
-                public void call(Object... args){
-
-               }
-            });
-
-            socket.on("onJoinResponse", new Emitter.Listener() {
+            socket.on("onNewNotification", new Emitter.Listener() {
                 @Override
                 public void call(Object... args) {
-
+                    Log.i("New Notification","True");
+                }
+            });
+            socket.on("onJoinRequest", new Emitter.Listener() {
+                @Override
+                public void call(Object... args) {
+                 Log.i("room joined:","True");
                 }
             });
 
-            socket.on("onLeaveResponse", new Emitter.Listener() {
+            socket.on("onLeaveRequest", new Emitter.Listener() {
                 @Override
                 public void call(Object... args) {
-
-                }
-            });
-
-            socket.on("onKnockknockQuestion", new Emitter.Listener() {
-                @Override
-                public void call(Object... args) {
-
+                    Log.i("room left","true");
                 }
             });
 

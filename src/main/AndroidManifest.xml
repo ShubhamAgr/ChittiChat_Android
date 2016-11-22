@@ -14,7 +14,9 @@
         android:theme="@style/AppTheme">
         <activity android:name=".MainActivity">
         </activity>
-        <activity android:name=".LoginActivity">
+        <activity
+            android:name=".LoginActivity"
+            android:theme="@style/AppTheme.mybar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
@@ -55,11 +57,18 @@
             android:name="io.fabric.ApiKey"
             android:value="b5c62ef9f8f2cec153058f21fb459fa61f2a06d6"/>
 
-        <activity android:name=".ShowTopics">
+        <activity
+            android:name=".ShowTopics"
+            android:theme="@style/AppTheme.mybar">
         </activity>
         <activity android:name=".CreateNewGroup">
         </activity>
         <activity android:name=".SignupActivity">
+        </activity>
+        <activity
+            android:name=".showUsersOrGroupsActivity"
+            android:label="@string/title_activity_show_users_or_groups"
+            android:theme="@style/AppTheme.NoActionBar">
         </activity>
     </application>
 

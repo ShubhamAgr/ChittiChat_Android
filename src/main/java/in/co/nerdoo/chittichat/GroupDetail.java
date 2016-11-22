@@ -4,50 +4,49 @@ package in.co.nerdoo.chittichat;
  * Created by shubham on 18/11/16.
  */
 public class GroupDetail {
-    private String groupId;
-    private String groupName;
+    private  String _id;
+    private  String name;
+    private  String pic_url;
+    private String  category;
+    private String about;
 
-    private String ProfilePictures;
-    private  String group_about;
-    private  String isOpen;
-
-    public String getGroupId() {
-        return groupId;
+    public String get_id() {
+        return _id;
     }
 
-    public void setGroupId(String groupId) {
-        this.groupId = groupId;
+    public void set_id(String _id) {
+        this._id = _id;
     }
 
-    public String getGroupName() {
-        return groupName;
+    public String getName() {
+        return name;
     }
 
-    public void setGroupName(String groupName) {
-        this.groupName = groupName;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public String getProfilePictures() {
-        return ProfilePictures;
+    public String getPic_url() {
+        return pic_url;
     }
 
-    public void setProfilePictures(String profilePictures) {
-        ProfilePictures = profilePictures;
+    public void setPic_url(String pic_url) {
+        this.pic_url = pic_url;
     }
 
-    public String getGroup_about() {
-        return group_about;
+    public String getCategory() {
+        return category;
     }
 
-    public void setGroup_about(String group_about) {
-        this.group_about = group_about;
+    public void setCategory(String category) {
+        this.category = category;
     }
 
-    public String getIsOpen() {
-        return isOpen;
+    public String getAbout() {
+        return about;
     }
 
-    public void setIsOpen(String isOpen) {
-        this.isOpen = isOpen;
+    public void setAbout(String about) {
+        this.about = about;
     }
 }

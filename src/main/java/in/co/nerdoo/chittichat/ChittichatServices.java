@@ -45,8 +45,8 @@ public interface ChittichatServices {
     @GET("/groups/{token}")
     Observable<List<GroupsList>> getResponseOnGroups(@Path("token") String token);
 
-    @GET("/groupDetail/{groupId}")
-    Observable<GroupDetail> getResponseOnGroupDetail(@Path("groupId") String groupId);
+    @GET("/groupDetail/{token}/{groupId}")
+    Observable<GroupDetail> getResponseOnGroupDetail(@Path("token")String token,@Path("groupId") String groupId);
 
 
     @POST("/newRequest")

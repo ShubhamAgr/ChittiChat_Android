@@ -1,11 +1,13 @@
         package in.co.nerdoo.chittichat;
 
+        import android.app.DialogFragment;
         import android.content.Intent;
         import android.content.SharedPreferences;
         import android.os.Handler;
         import android.os.Looper;
         import android.support.v7.app.AppCompatActivity;
         import android.os.Bundle;
+        import android.support.v7.widget.Toolbar;
         import android.util.Log;
         import android.view.View;
         import android.widget.TextView;
@@ -61,6 +63,9 @@
                 FacebookSdk.sdkInitialize(getApplicationContext());
                 facebookCallbackManager = CallbackManager.Factory.create();
                 setContentView(R.layout.activity_login);
+                Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_login);
+                toolbar.showOverflowMenu();
+                setSupportActionBar(toolbar);
                 getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
 
@@ -298,7 +303,9 @@
                 });
             }
             public void onClickSignup(View view){
-                startActivity(new Intent(LoginActivity.this,SignupActivity.class));
+
+                DialogFragment dialogFragment = new SignupDialog();
+                dialogFragment.show(getFragmentManager(),"show");
             }
         }
         class SignupWithFacebookInformation {

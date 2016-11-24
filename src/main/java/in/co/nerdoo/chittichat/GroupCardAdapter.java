@@ -79,7 +79,14 @@ public class GroupCardAdapter extends RecyclerView.Adapter<GroupCardAdapter.View
         try{
 
             String groupId = mDataset.get(position).get_id();
-            Picasso.with(group_profile_context).load((String)properties.get(groupId+"pic_url")).into(holder.group_profile_pic);
+            String pic_url=(String)properties.get(groupId+"pic_url");
+            Log.d("picture url",pic_url);
+            if(pic_url.equals("default")){
+                Picasso.with(group_profile_context).load(R.drawable.group_icon_black).into(holder.group_profile_pic);
+            }else{
+                Picasso.with(group_profile_context).load(pic_url).into(holder.group_profile_pic);
+            }
+
             holder.group_notification.setText(((String)properties.get(groupId+"motivation")));//properties.get(mDataset.get(position).get_id())));
             holder.group_title.setText((String)properties.get(groupId+"name"));
 

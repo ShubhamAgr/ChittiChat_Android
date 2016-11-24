@@ -77,10 +77,10 @@ public interface ChittichatServices {
     Observable<ResponseMessage> getResponseOnNewTopic(@Body NewTopicInformation newTopicInformation);
 
     @GET("allTopics/{token}/{groupId}")
-    Observable<ResponseMessage> getResponseOnAllTopics(@Path("token") String token, @Path("groupId") String groupId);
+    Observable<List<Topics>> getResponseOnAllTopics(@Path("token") String token, @Path("groupId") String groupId);
 
     @GET("topicsWithArticle/{token}/{groupId}")
-    Observable<ResponseMessage> getResponseOnTopicsWithArticle(@Path("token") String token,@Path("groupId")String groupId); //pass token and groupId
+    Observable<List<TopicsWithArticle>> getResponseOnTopicsWithArticle(@Path("token") String token,@Path("groupId")String groupId); //pass token and groupId
     // Param
 
     @GET("articles/{token}/{topicId}/{range}")

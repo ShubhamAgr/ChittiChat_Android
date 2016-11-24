@@ -4,6 +4,9 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.widget.EditText;
 
 import java.io.File;
 
@@ -31,18 +34,20 @@ public class TopicActivity extends AppCompatActivity {
     private static String token;
     private static String topicId;
     private  static ChittichatServices chittichatServices;
+    private EditText articleContent;
+    private String articleType;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_topic);
-
+        articleContent = (EditText) findViewById(R.id.articleText);
         ((ChittichatApp) getApplication()).getMainAppComponent().inject(this);
 
         Bundle extras = getIntent().getExtras();
         if(extras == null){
             topicId = null;
         }else{
-            topicId = extras.getString("topicId");
+            topicId = extras.getString("TopicId");
             token = sharedPreferences.getString("ChittiChat_token",null);
         }
         chittichatServices = retrofit.create(ChittichatServices.class);
@@ -70,13 +75,12 @@ public class TopicActivity extends AppCompatActivity {
     }
 
 
-    private void postArticle(final String article){
-        ArticleInformation articleInformation = new ArticleInformation(token,topicId,article);
+    private void postArticle(ArticleInformation articleInformation ){
         Observable<ResponseMessage> getResponseOnArticleUpload = chittichatServices.getResponseOnPostArticle(articleInformation);
         getResponseOnArticleUpload.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<ResponseMessage>() {
             @Override
             public void onCompleted() {
-
+                Log.d("PostArticle","completed");
             }
 
             @Override
@@ -86,6 +90,13 @@ public class TopicActivity extends AppCompatActivity {
 
             @Override
             public void onNext(ResponseMessage responseMessage) {
+                    try {
+                        Log.d("Article sent",responseMessage.getMessage());
+                    }catch (Exception e){
+                        Log.e("Article sent Ex:",e.getMessage());
+                    }
+
+
 
             }
         });
@@ -203,15 +214,24 @@ public class TopicActivity extends AppCompatActivity {
         });
     }
 
+    public void onClickSend(View view){
+        //upload your articles....
+        String text = articleContent.getText().toString();
+        if(!text.equals("")){
+            ArticleInformation articleInformation = new ArticleInformation(token,topicId,text);
+            postArticle(articleInformation);
+        }
+
+    }
 
 }
 
 class  ArticleInformation{
-    String token,topicId,article;
+    String token,topicId,article_content;
 
-    public ArticleInformation(String token, String topicId, String article) {
+    public ArticleInformation(String token, String topicId, String article_content) {
         this.token = token;
         this.topicId = topicId;
-        this.article = article;
+        this.article_content = article_content;
     }
 }

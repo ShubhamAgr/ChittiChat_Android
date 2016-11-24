@@ -19,8 +19,8 @@
                 android:id="@+id/group_profilePic"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/album_cover_height"
+                android:src="@drawable/group_icon_black"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:clickable="true"
                 android:scaleType="fitXY" />
 
             <TextView
@@ -30,6 +30,7 @@
                 android:gravity="center"
                 android:text = "Group Name"
                 android:layout_below="@id/group_profilePic"
+
                 android:paddingLeft="@dimen/album_title_padding"
                 android:paddingRight="@dimen/album_title_padding"
                 android:paddingTop="@dimen/album_title_padding"

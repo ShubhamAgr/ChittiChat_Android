@@ -14,6 +14,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import java.util.List;
+
 import javax.inject.Inject;
 
 import retrofit2.Retrofit;
@@ -87,9 +89,9 @@ public class ShowTopics extends AppCompatActivity {
     }
 
     private static void callTopics(final String token,final String groupId) {
-        Observable<ResponseMessage> getTopicsWithArticle = chittichatServices.getResponseOnTopicsWithArticle(token,groupId);
+        Observable<List<TopicsWithArticle>> getTopicsWithArticle = chittichatServices.getResponseOnTopicsWithArticle(token,groupId);
             subscription_first = getTopicsWithArticle.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(new
-                                                                                                                                          Observer<ResponseMessage>() {
+                                                                                                                                          Observer<List<TopicsWithArticle>>() {
             @Override
             public void onCompleted() {
                 subscription_first.unsubscribe();
@@ -102,10 +104,32 @@ public class ShowTopics extends AppCompatActivity {
             }
 
             @Override
-            public void onNext(ResponseMessage responseMessage) {
+            public void onNext(List<TopicsWithArticle> articles) {
                     //send data to the recycler view of the
             }
         });
+    }
+}
+class Topics{
+    private  String _id;
+
+    public String get_id() {
+        return _id;
+    }
+
+    public void set_id(String _id) {
+        this._id = _id;
+    }
+}
+class TopicsWithArticle{
+    private  String _id;
+
+    public String get_id() {
+        return _id;
+    }
+
+    public void set_id(String _id) {
+        this._id = _id;
     }
 }
 

@@ -32,6 +32,7 @@
     import com.couchbase.lite.Document;
     import com.couchbase.lite.Manager;
     import com.couchbase.lite.UnsavedRevision;
+    import com.facebook.login.LoginManager;
     import com.squareup.picasso.Picasso;
 
     import org.json.JSONException;
@@ -207,6 +208,9 @@
                  case R.id.editProfile:
                      startActivity(new Intent(FirstActivity.this,SettingsActivity.class));
                      return true;
+                 case R.id.fb_logut:
+                     LoginManager.getInstance().logOut();
+                     return true;
                  default:
                      Toast.makeText(getApplicationContext(),"Does not match any options",Toast.LENGTH_SHORT).show();
              }
@@ -282,14 +286,16 @@
         @Override
         protected void onDestroy() {
             super.onDestroy();
-            Iterator<GroupsList> it = groupsList.listIterator();
-            while (it.hasNext()){
-                JSONObject joinRoomrequest = new JSONObject();
-                try {
-                    joinRoomrequest.put("room_id",it.next().get_id().toString());
-                    socket.emit("leaveRoom",joinRoomrequest) ;
-                } catch (JSONException e) {
-                    e.printStackTrace();
+            if(socket.connected()) {
+                Iterator<GroupsList> it = groupsList.listIterator();
+                while (it.hasNext()) {
+                    JSONObject joinRoomrequest = new JSONObject();
+                    try {
+                        joinRoomrequest.put("room_id", it.next().get_id().toString());
+                        socket.emit("leaveRoom", joinRoomrequest);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }

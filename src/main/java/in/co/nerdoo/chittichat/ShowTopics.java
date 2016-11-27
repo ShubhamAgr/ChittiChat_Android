@@ -8,6 +8,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
@@ -27,6 +29,8 @@ import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
 public class ShowTopics extends AppCompatActivity {
+
+
     @Inject
     Retrofit retrofit;
     @Inject
@@ -34,6 +38,8 @@ public class ShowTopics extends AppCompatActivity {
     private String groupId;
     private static ChittichatServices chittichatServices;
     private  static Subscription subscription_first,subscription_second,subscription_third;
+    private static RecyclerView recyclerView;
+    private RecyclerView.LayoutManager layoutManager;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,6 +55,10 @@ public class ShowTopics extends AppCompatActivity {
 
 
        chittichatServices  = retrofit.create(ChittichatServices.class);
+        recyclerView = (RecyclerView) findViewById(R.id.topics_recycler_view);
+        recyclerView.setHasFixedSize(true);
+        layoutManager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(layoutManager);
         Bundle extras = getIntent().getExtras();
         if(extras == null) {
             groupId = null;
@@ -59,6 +69,7 @@ public class ShowTopics extends AppCompatActivity {
             editor.apply();
 //            callTopics(sharedPreferences.getString("ChittiChat_token",null),groupId);
         }
+        callTopics(sharedPreferences.getString("ChittiChat_token",null),groupId);
 
     }
     @Override
@@ -88,9 +99,32 @@ public class ShowTopics extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private static void callTopics(final String token,final String groupId) {
+    private static void callTopics(final String token,final String groupId){
+        Observable<List<Topics>> getTopics = chittichatServices.getResponseOnAllTopics(token,groupId);
+        subscription_third = getTopics.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<List<Topics>>() {
+            @Override
+            public void onCompleted() {
+                Log.d("Chittichat service:","request completed");
+                subscription_third.unsubscribe();
+            }
+
+            @Override
+            public void onError(Throwable e) {
+
+            }
+
+            @Override
+            public void onNext(List<Topics> mytopics) {
+                TopicAdapter adapter = new TopicAdapter(mytopics);
+                recyclerView.setAdapter(adapter);
+
+            }
+        });
+    }
+
+    private static void callTopicsWithArticles(final String token,final String groupId) {
         Observable<List<TopicsWithArticle>> getTopicsWithArticle = chittichatServices.getResponseOnTopicsWithArticle(token,groupId);
-            subscription_first = getTopicsWithArticle.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(new
+            subscription_first = getTopicsWithArticle.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new
                                                                                                                                           Observer<List<TopicsWithArticle>>() {
             @Override
             public void onCompleted() {
@@ -98,7 +132,7 @@ public class ShowTopics extends AppCompatActivity {
                 Log.d("ChittiChat Server:","request completed");
             }
 
-            @Override
+                @Override
             public void onError(Throwable e) {
                 Log.d("ChittiChat Server:",e.getMessage());
             }
@@ -112,9 +146,27 @@ public class ShowTopics extends AppCompatActivity {
 }
 class Topics{
     private  String _id;
+    private String topic_title;
+    private String topic_detail;
 
     public String get_id() {
         return _id;
+    }
+
+    public String getTopic_title() {
+        return topic_title;
+    }
+
+    public void setTopic_title(String topic_title) {
+        this.topic_title = topic_title;
+    }
+
+    public String getTopic_detail() {
+        return topic_detail;
+    }
+
+    public void setTopic_detail(String topic_detail) {
+        this.topic_detail = topic_detail;
     }
 
     public void set_id(String _id) {

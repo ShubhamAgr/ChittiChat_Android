@@ -6,7 +6,9 @@
     import android.content.Intent;
     import android.content.SharedPreferences;
     import android.content.res.Resources;
+    import android.graphics.Color;
     import android.graphics.Rect;
+    import android.graphics.drawable.ColorDrawable;
     import android.os.Bundle;
     import android.speech.RecognizerIntent;
     import android.support.design.widget.AppBarLayout;
@@ -23,7 +25,9 @@
     import android.view.MenuItem;
     import android.view.View;
     import android.view.inputmethod.InputMethodManager;
+    import android.widget.Button;
     import android.widget.EditText;
+    import android.widget.ImageButton;
     import android.widget.ImageView;
     import android.widget.Toast;
 
@@ -80,22 +84,30 @@
         private GroupCardAdapter adapter;
         private  static List<GroupsList> groupsList;
         private EditText chittichatsearch;
+        private ImageButton mysearchbutton;
+        private ImageButton mynotificationbutton;
         private ImageView profile_pic_ImageView;
+        private Toolbar toolbar;
         private final int REQ_CODE_SPEECH_INPUT = 100;
         private Subscription subscription;
         ActionBar actionBar;
 
         private static GroupDetail newgroupDetail;
+        private  static boolean menuEnabled;
         @Override
         protected void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             setContentView(R.layout.activity_first);
-
-                Toolbar toolbar = (Toolbar) findViewById(R.id.toolbarXX);
+                chittichatsearch =(EditText) findViewById(R.id.chittichatsearch);
+                mysearchbutton = (ImageButton) findViewById(R.id.mysearchbutton);
+                mynotificationbutton = (ImageButton) findViewById(R.id.mynotificationbutton);
+                menuEnabled = true;
+                toolbar = (Toolbar) findViewById(R.id.toolbarXX);
                 toolbar.showOverflowMenu();
                 setSupportActionBar(toolbar);
                 actionBar = getSupportActionBar();
-                actionBar.setDisplayHomeAsUpEnabled(true);
+                actionBar.setHomeButtonEnabled(false);
+                actionBar.setDisplayHomeAsUpEnabled(false);
 
                 initCollapsingToolbar();
 
@@ -189,7 +201,17 @@
         }
         @Override
         public boolean onCreateOptionsMenu(Menu menu) {
+
             getMenuInflater().inflate(R.menu.menu_first, menu);
+            if(menuEnabled){
+                for(int i=0; i< menu.size();i++){
+                    menu.getItem(i).setVisible(true);
+                }
+            }else{
+                for(int i=0; i< menu.size();i++){
+                    menu.getItem(i).setVisible(false);
+                }
+            }
             return true;
         }
         @Override
@@ -211,8 +233,18 @@
                  case R.id.fb_logut:
                      LoginManager.getInstance().logOut();
                      return true;
+                 case android.R.id.home:
+                     menuEnabled = true;
+                     invalidateOptionsMenu();
+                     actionBar.setBackgroundDrawable(new ColorDrawable(Color.parseColor("#3F51B5")));
+                     actionBar.setHomeButtonEnabled(false);
+                     actionBar.setDisplayHomeAsUpEnabled(false);
+                     mynotificationbutton.setVisibility(View.VISIBLE);
+                     mysearchbutton.setVisibility(View.VISIBLE);
+                     chittichatsearch.setVisibility(View.GONE);
+                     chittichatsearch.setText("");
                  default:
-                     Toast.makeText(getApplicationContext(),"Does not match any options",Toast.LENGTH_SHORT).show();
+//                     Toast.makeText(getApplicationContext(),"Does not match any options",Toast.LENGTH_SHORT).show();
              }
             return super.onOptionsItemSelected(item);
         }
@@ -341,16 +373,19 @@
         }
 
         public void onClickSearchButton(View view) {
+
+            menuEnabled = false;
+            invalidateOptionsMenu();
+            actionBar.setHomeAsUpIndicator(R.drawable.ic_arrow_back_black_24dp);
+            actionBar.setBackgroundDrawable(new ColorDrawable(0xffffffff));
+            actionBar.setHomeButtonEnabled(true);
+            actionBar.setDisplayHomeAsUpEnabled(true);
+            mynotificationbutton.setVisibility(View.GONE);
+            mysearchbutton.setVisibility(View.GONE);
             chittichatsearch.setVisibility(View.VISIBLE);
             chittichatsearch.requestFocus();
             InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
             inputMethodManager.toggleSoftInput(InputMethodManager.SHOW_FORCED,0);
-        }
-
-        public void onBackButtonClick(View view) {
-            chittichatsearch.setVisibility(View.GONE);
-            chittichatsearch.setText("");
-
         }
 
         public void onVoiceSearchClick(View view) {

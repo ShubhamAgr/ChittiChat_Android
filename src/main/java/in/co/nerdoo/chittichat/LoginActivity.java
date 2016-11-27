@@ -1,5 +1,6 @@
             package in.co.nerdoo.chittichat;
 
+            import android.app.Activity;
             import android.app.DialogFragment;
             import android.content.Intent;
             import android.content.SharedPreferences;
@@ -113,7 +114,7 @@
 
                             Bundle parameters = new Bundle();
                             parameters.putString("fields", "id,name,birthday,first_name,last_name,verified,age_range,locale,timezone,updated_time,gender," +
-                                    "picture.type(large),cover,link");
+                                    "picture.width(800).height(800),cover,link");
                             request.setParameters(parameters);
                             request.executeAsync();
 
@@ -253,6 +254,7 @@
                                                                                                                                                                    Log.d("token", sharedPreferences.getString("ChittiChat_token", null));
                                                                                                                                                                    Intent intent = new Intent(LoginActivity.this, FirstActivity.class);
                                                                                                                                                                    startActivity(intent);
+                                                                                                                                                                   finish();
 
                                                                                                                                                                }
                                                                                                                                                            }

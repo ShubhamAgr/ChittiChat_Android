@@ -35,7 +35,7 @@ public class TopicActivity extends AppCompatActivity {
     private static String topicId;
     private  static ChittichatServices chittichatServices;
     private EditText articleContent;
-    private String articleType;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -218,6 +218,7 @@ public class TopicActivity extends AppCompatActivity {
         //upload your articles....
         String text = articleContent.getText().toString();
         if(!text.equals("")){
+            Log.d("Article",text);
             ArticleInformation articleInformation = new ArticleInformation(token,topicId,text);
             postArticle(articleInformation);
         }
@@ -232,6 +233,49 @@ class  ArticleInformation{
     public ArticleInformation(String token, String topicId, String article_content) {
         this.token = token;
         this.topicId = topicId;
+        this.article_content = article_content;
+    }
+}
+class Articles{
+    private String _id,createdOn,publishedBy,content_type,article_content;
+
+    public String get_id() {
+        return _id;
+    }
+
+    public void set_id(String _id) {
+        this._id = _id;
+    }
+
+    public String getCreatedOn() {
+        return createdOn;
+    }
+
+    public void setCreatedOn(String createdOn) {
+        this.createdOn = createdOn;
+    }
+
+    public String getPublishedBy() {
+        return publishedBy;
+    }
+
+    public void setPublishedBy(String publishedBy) {
+        this.publishedBy = publishedBy;
+    }
+
+    public String getContent_type() {
+        return content_type;
+    }
+
+    public void setContent_type(String content_type) {
+        this.content_type = content_type;
+    }
+
+    public String getArticle_content() {
+        return article_content;
+    }
+
+    public void setArticle_content(String article_content) {
         this.article_content = article_content;
     }
 }

@@ -18,7 +18,7 @@ public class ChittichatApp extends Application {
      Fabric.with(this, new Crashlytics());
         chittichatAppInstance = this;
         mainAppComponent = DaggerMainAppComponent.builder().appModule(new AppModule(this)).storageModule(new StorageModule())
-                .netModule(new NetModule("http://35.160.113.29")).build();
+                .netModule(new NetModule("http://a4bb8a10.ngrok.io")).build();
 
     }
 

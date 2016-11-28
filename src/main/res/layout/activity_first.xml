@@ -39,14 +39,18 @@
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
                 app:layout_collapseMode="pin"
+                app:titleMarginStart="0dp"
+                android:layout_gravity="right"
                 android:background="?attr/colorPrimary"
                 android:theme="@style/AppThemex.AppBarOverlay"
                 app:popupTheme="@style/AppTheme.PopupOverlay">
                 <LinearLayout
                     android:orientation="horizontal"
                     android:layout_height="match_parent"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:id="@+id/toobar_layout_one"
+
+                    android:foregroundGravity="right"
                     android:gravity="right">
                     <!--<TextView-->
                         <!--android:layout_height="match_parent"-->
@@ -81,21 +85,22 @@
                         android:background="@null"
                         android:src="@drawable/ic_notifications_none_white_24dp"/>
 
-                    <EditText
-                        android:id="@+id/chittichatsearch"
-                        android:layout_height="match_parent"
-                        android:layout_width="match_parent"
-                        android:layout_alignParentLeft="true"
-                        android:focusableInTouchMode="true"
-                        android:focusable="true"
-                        android:visibility="gone"
-                        android:fitsSystemWindows="true"
-                        android:hint="@string/search"
-                        android:background="@color/white"
-                        android:textColorHint="#a2564646"
-                        android:textColor="@color/black"
-                        />
+
                 </LinearLayout>
+                <EditText
+                    android:id="@+id/chittichatsearch"
+                    android:layout_height="match_parent"
+                    android:layout_width="match_parent"
+                    android:layout_alignParentLeft="true"
+                    android:focusableInTouchMode="true"
+                    android:focusable="true"
+                    android:visibility="gone"
+                    android:fitsSystemWindows="true"
+                    android:hint="@string/search"
+                    android:background="@color/white"
+                    android:textColorHint="#a2564646"
+                    android:textColor="@color/black"
+                    />
             </android.support.v7.widget.Toolbar>
 
         </android.support.design.widget.CollapsingToolbarLayout>

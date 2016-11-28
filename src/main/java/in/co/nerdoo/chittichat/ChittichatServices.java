@@ -4,6 +4,7 @@ import java.util.List;
 
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
+import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.Multipart;
@@ -93,7 +94,8 @@ public interface ChittichatServices {
 
     @Multipart
     @POST("image")
-    Observable<ResponseMessage> getResponseOnPostImage(@Part("image") MultipartBody.Part image, @Part("description") RequestBody description);
+    Call<ResponseMessage> getResponseOnPostImage(@Part("file\"; filename=\"pp.png\" ") RequestBody file, @Part("token") RequestBody token,
+                                                 @Part("topicId") RequestBody id);
 
     @Multipart
     @POST("groupImage")

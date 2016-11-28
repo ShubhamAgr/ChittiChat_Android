@@ -1,9 +1,19 @@
 package in.co.nerdoo.chittichat;
 
+import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
+import android.app.Activity;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
+import android.provider.DocumentsContract;
+import android.provider.MediaStore;
+import android.support.v4.content.CursorLoader;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -17,6 +27,9 @@ import io.socket.emitter.Emitter;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.http.Body;
 import rx.Observable;
@@ -35,12 +48,19 @@ public class TopicActivity extends AppCompatActivity {
     private static String topicId;
     private  static ChittichatServices chittichatServices;
     private EditText articleContent;
+    private int PICK_IMAGE_REQUEST = 1;
+    private int GALLERY_KITKAT_INTENT_CALLED=2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_topic);
         articleContent = (EditText) findViewById(R.id.articleText);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_articles);
+        toolbar.setTitle("Articles");
+        toolbar.showOverflowMenu();
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         ((ChittichatApp) getApplication()).getMainAppComponent().inject(this);
 
         Bundle extras = getIntent().getExtras();
@@ -51,6 +71,57 @@ public class TopicActivity extends AppCompatActivity {
             token = sharedPreferences.getString("ChittiChat_token",null);
         }
         chittichatServices = retrofit.create(ChittichatServices.class);
+
+    }
+    public void onaddImage(View view){
+        Intent intent = new Intent();
+
+        intent.setType("image/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        try{
+            startActivityForResult(intent,PICK_IMAGE_REQUEST);//Intent.createChooser(intent, "Select Picture"), PICK_IMAGE_REQUEST);
+        }catch (Exception e){
+            Log.d("e",e.getMessage());
+        }
+    }
+    @TargetApi(Build.VERSION_CODES.KITKAT)
+    private String getPathFromURI(Uri contentUri) {
+        //Will work only in kitkat......... and above...
+        String wholeID = DocumentsContract.getDocumentId(contentUri);
+
+        // Split at colon, use second item in the array
+        String id = wholeID.split(":")[1];
+
+        String[] column = { MediaStore.Images.Media.DATA };
+
+        // where id is equal to
+        String sel = MediaStore.Images.Media._ID + "=?";
+
+        Cursor cursor = getContentResolver().
+                query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                        column, sel, new String[]{ id }, null);
+
+        String filePath = "";
+
+        int columnIndex = cursor.getColumnIndex(column[0]);
+
+        if (cursor.moveToFirst()) {
+            filePath = cursor.getString(columnIndex);
+        }
+
+        cursor.close();
+        return filePath;
+    }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
+
+            Uri uri = data.getData();
+            Log.i("ImageURI",uri.toString());
+            postImage(uri);
+        }
     }
 
     private  void fetchArticles(final String range){
@@ -105,28 +176,57 @@ public class TopicActivity extends AppCompatActivity {
 
 
     private void postImage(Uri imageUri){
-        File file = new File(imageUri.getPath());
-        RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"),file);
-        MultipartBody.Part body = MultipartBody.Part.createFormData("image",file.getName(),requestFile);
-        String descriptionString = "This is image uploaded by user and user Id is......";
-        RequestBody description = RequestBody.create(MediaType.parse("multipart/form-data"),descriptionString);
-        Observable<ResponseMessage> getResponseOnImageUpload = chittichatServices.getResponseOnPostImage(body,description);
-        getResponseOnImageUpload.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<ResponseMessage>() {
-            @Override
-            public void onCompleted() {
+//        File file = new File(imageUri.getPath());
+//        RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"),file);
+//        MultipartBody.Part body = MultipartBody.Part.createFormData("name",file.getName(),requestFile);
+//        String descriptionString = token +","+topicId;
+//        RequestBody description = RequestBody.create(MediaType.parse("multipart/form-data"),descriptionString);
 
-            }
+        String path = getPathFromURI(imageUri);
+        if(path.equals("")){
+                Log.d("imageUri",imageUri.toString());
+                Log.d("imageUri.path",imageUri.getPath());
+                Log.d("file path:","is null");
+        }else{
+            Log.d("file path",path);
+            File file = new File(path);
+            RequestBody fbody = RequestBody.create(MediaType.parse("image/*"), file);
+            RequestBody mytoken = RequestBody.create(MediaType.parse("text/plain"), token);
+            RequestBody mtopicId = RequestBody.create(MediaType.parse("text/plain"), topicId);
 
-            @Override
-            public void onError(Throwable e) {
+            Call<ResponseMessage> call = chittichatServices.getResponseOnPostImage(fbody,mytoken,mtopicId);
+            call.enqueue(new Callback<ResponseMessage>() {
+                @Override
+                public void onResponse(Call<ResponseMessage> call, Response<ResponseMessage> response) {
+                    Log.d("Image",response.body().getMessage());
+                }
 
-            }
+                @Override
+                public void onFailure(Call<ResponseMessage> call, Throwable t) {
+//                    Log.d("Image",t.getMessage());
+                }
+            });
+        }
 
-            @Override
-            public void onNext(ResponseMessage responseMessage) {
 
-            }
-        });
+//        Observable<ResponseMessage> getResponseOnImageUpload = chittichatServices.getResponseOnPostImage(body,description);
+//        getResponseOnImageUpload.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<ResponseMessage>() {
+//            @Override
+//            public void onCompleted() {
+//                Log.e("ImageUpload","completed");
+//            }
+//
+//            @Override
+//            public void onError(Throwable e) {
+//                Log.e("ImageUpload",e.getMessage());
+//
+//            }
+//
+//            @Override
+//            public void onNext(ResponseMessage responseMessage) {
+//                Log.e("ImageUpload",responseMessage.getMessage());
+//            }
+//        });
 
     }
 
@@ -234,6 +334,15 @@ class  ArticleInformation{
         this.token = token;
         this.topicId = topicId;
         this.article_content = article_content;
+    }
+}
+class  MediaInformation{
+    String token,topicId,mediatype;
+
+    public MediaInformation(String token, String topicId, String mediatype) {
+        this.token = token;
+        this.topicId = topicId;
+        this.mediatype = mediatype;
     }
 }
 class Articles{

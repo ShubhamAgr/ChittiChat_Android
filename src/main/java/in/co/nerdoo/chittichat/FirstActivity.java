@@ -104,6 +104,7 @@
                 menuEnabled = true;
                 toolbar = (Toolbar) findViewById(R.id.toolbarXX);
                 toolbar.showOverflowMenu();
+                toolbar.setTitle("ChittiChat");
                 setSupportActionBar(toolbar);
                 actionBar = getSupportActionBar();
                 actionBar.setHomeButtonEnabled(false);
@@ -430,7 +431,7 @@
         private void initCollapsingToolbar() {
             final CollapsingToolbarLayout collapsingToolbar =
                     (CollapsingToolbarLayout) findViewById(R.id.toolbar_layout);
-//            collapsingToolbar.setTitle("Shubham");//setTo user name or First name.....
+            collapsingToolbar.setTitle("Shubham");//setTo user name or First name.....
 
 
             AppBarLayout appBarLayout = (AppBarLayout) findViewById(R.id.app_bar);
@@ -446,15 +447,15 @@
                     if (scrollRange == -1) {
                         scrollRange = appBarLayout.getTotalScrollRange();
                         actionBar.hide();
-                        collapsingToolbar.setTitle("Shubham");
+//                        collapsingToolbar.setTitle("Shubham");
                     }
                     if (scrollRange + verticalOffset == 0) {
                         collapsingToolbar.setTitle(getString(R.string.app_name));
                         actionBar.show();
                         isShow = true;
                     } else if (isShow) {
-                        collapsingToolbar.setTitle("Shubham");
                         actionBar.hide();
+                        collapsingToolbar.setTitle("Shubham");
                         isShow = false;
                     }
                 }

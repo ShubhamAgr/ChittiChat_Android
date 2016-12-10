@@ -185,119 +185,107 @@
                 private void loginWithEmail(final String email, final String password) {
                     LoginWithEmailInformation loginWithEmailInformation = new LoginWithEmailInformation(email, password);
                     Observable<ResponseMessage> getResponseOnLoginWithEmail = chittichatServices.getResponseOnLoginWithEmail(loginWithEmailInformation);
-                    subscription_fourth = getResponseOnLoginWithEmail.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(new
-                                                                                                                                                               Observer<ResponseMessage>() {
-                                                                                                                                                                   @Override
-                                                                                                                                                                   public void onCompleted() {
-                                                                                                                                                                       subscription_fourth.unsubscribe();
-                                                                                                                                                                   }
+                    subscription_fourth = getResponseOnLoginWithEmail.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<ResponseMessage>() {
+                        @Override
+                        public void onCompleted() {
+                            subscription_fourth.unsubscribe();
+                        }
 
-                                                                                                                                                                   @Override
-                                                                                                                                                                   public void onError(Throwable e) {
+                        @Override
+                        public void onError(Throwable e) {
 
-                                                                                                                                                                   }
+                        }
 
-                                                                                                                                                                   @Override
-                                                                                                                                                                   public void onNext(ResponseMessage responseMessage) {
+                        @Override
+                        public void onNext(ResponseMessage responseMessage) {
 
-                                                                                                                                                                   }
-                                                                                                                                                               });
+                        }
+                    });
                 }
 
 
                 private void logincall(final LoginInformation loginInformation) {
                     final Observable<ResponseMessage> getloginToken = chittichatServices.getResponseOnLoginWithFacebook(loginInformation);
-                    subscription_first = getloginToken.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new
-                                                                                                                                                       Observer<ResponseMessage>() {
-                                                                                                                                                           @Override
-                                                                                                                                                           public void onCompleted() {
-                                                                                                                                                               subscription_first.unsubscribe();
-                                                                                                                                                               Log.d(TAG1, "operation completed");
-                                                                                                                                                           }
+                    subscription_first = getloginToken.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<ResponseMessage>() {
+                        @Override
+                        public void onCompleted() {
+                            subscription_first.unsubscribe();
+                            Log.d(TAG1, "operation completed");
+                        }
 
-                                                                                                                                                           @Override
-                                                                                                                                                           public void onError(Throwable e) {
-                                                                                                                                                               Log.e(TAG1, e.getMessage());
-                                                                                                                                                           }
+                        @Override
+                        public void onError(Throwable e) {
+                            Log.e(TAG1, e.getMessage());
+                        }
 
-                                                                                                                                                           @Override
-                                                                                                                                                           public void onNext(ResponseMessage responseMessage) {
+                        @Override
+                        public void onNext(ResponseMessage responseMessage) {
 
-                                                                                                                                                               if (responseMessage.getMessage().equals("user not found")) {
-                                                                                                                                                                   SignupWithFacebookInformation signupWithFacebookInformation = new SignupWithFacebookInformation(sharedPreferences
-                                                                                                                                                                           .getString("fb_userId", null), sharedPreferences.getString("first_name", null), sharedPreferences.getString
-                                                                                                                                                                           ("last_name", null), sharedPreferences.getString("fb_token", null));
-                                                                                                                                                                   signupWithFacebookCall(signupWithFacebookInformation);
+                            if (responseMessage.getMessage().equals("user not found")) {
+                                SignupWithFacebookInformation signupWithFacebookInformation = new SignupWithFacebookInformation(sharedPreferences
+                                        .getString("fb_userId", null), sharedPreferences.getString("first_name", null), sharedPreferences.getString
+                                        ("last_name", null), sharedPreferences.getString("fb_token", null));
+                                signupWithFacebookCall(signupWithFacebookInformation);
 
-                                                                                                                                                               } else if (responseMessage.getMessage().equals("something went wrong")) {
-                                                                                                                                                                   timer.scheduleAtFixedRate(new TimerTask() {
-                                                                                                                                                                       @Override
-                                                                                                                                                                       public void run() {
-                                                                                                                                                                           try {
-                                                                                                                                                                               Handler handler = new Handler(Looper.getMainLooper());
-                                                                                                                                                                               handler.post(new Runnable() {
+                            } else if (responseMessage.getMessage().equals("something went wrong")) {
+                                timer.scheduleAtFixedRate(new TimerTask() {
+                                    @Override
+                                    public void run() {try {Handler handler = new Handler(Looper.getMainLooper());handler.post(new Runnable() {
                                                                                                                                                                                    @Override
-                                                                                                                                                                                   public void run() {
-                                                                                                                                                                                       logincall(loginInformation);
-                                                                                                                                                                                   }
-                                                                                                                                                                               });
-                                                                                                                                                                           } catch (Exception e) {
-                                                                                                                                                                               Log.d("timer", e.getMessage());
-                                                                                                                                                                           }
+                                                                                                                                                                                   public void run() {logincall(loginInformation);}
+                                                                                                                                                                               });} catch (Exception e) {Log.d("timer", e.getMessage());
+                                    }
 
 
-                                                                                                                                                                       }
-                                                                                                                                                                   }, 0, 900000);
-                                                                                                                                                               } else {
-                                                                                                                                                                   editor.putString("ChittiChat_token", responseMessage.getMessage());
-                                                                                                                                                                   editor.apply();
-                                                                                                                                                                   Log.d("token", sharedPreferences.getString("ChittiChat_token", null));
-                                                                                                                                                                   Intent intent = new Intent(LoginActivity.this, FirstActivity.class);
-                                                                                                                                                                   startActivity(intent);
-                                                                                                                                                                   finish();
+                                    }
+                                }, 0, 900000);
+                            } else {
+                                editor.putString("ChittiChat_token", responseMessage.getMessage());
+                                editor.apply();
+                                Log.d("token", sharedPreferences.getString("ChittiChat_token", null));
+                                Intent intent = new Intent(LoginActivity.this, FirstActivity.class);
+                                startActivity(intent);
+                                finish();
 
-                                                                                                                                                               }
-                                                                                                                                                           }
-                                                                                                                                                       });
+                            }
+                        }
+                    });
 
                 }
 
                 private void signupWithFacebookCall(final SignupWithFacebookInformation signupWithFacebookInformation) {
                     final Observable<ResponseMessage> signupUsingFacebookId = chittichatServices.getResponseOnSignupWithFacebook(signupWithFacebookInformation);
-                    subscription_second = signupUsingFacebookId.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new
-                                                                                                                                                                Observer<ResponseMessage>() {
-                                                                                                                                                                    @Override
-                                                                                                                                                                    public void onCompleted() {
-                                                                                                                                                                        subscription_second.unsubscribe();
-                                                                                                                                                                        Log.d(TAG1, "operation completed");
-                                                                                                                                                                    }
+                    subscription_second = signupUsingFacebookId.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<ResponseMessage>() {
+                        @Override
+                        public void onCompleted() {
+                         subscription_second.unsubscribe();
+                         Log.d(TAG1, "operation completed");
+                         }
+                         @Override
+                         public void onError(Throwable e) {
 
-                                                                                                                                                                    @Override
-                                                                                                                                                                    public void onError(Throwable e) {
-
-                                                                                                                                                                    }
-
-                                                                                                                                                                    @Override
-                                                                                                                                                                    public void onNext(ResponseMessage responseMessage) {
-                                                                                                                                                                        if (responseMessage.getMessage().equals("something went wrong")) {
-                                                                                                                                                                            timer.scheduleAtFixedRate(new TimerTask() {
-                                                                                                                                                                                @Override
-                                                                                                                                                                                public void run() {
-                                                                                                                                                                                    try {
-                                                                                                                                                                                        Handler handler = new Handler(Looper.getMainLooper());
-                                                                                                                                                                                        handler.post(new Runnable() {
-                                                                                                                                                                                            @Override
-                                                                                                                                                                                            public void run() {
-                                                                                                                                                                                                signupWithFacebookCall(signupWithFacebookInformation);
-                                                                                                                                                                                            }
-                                                                                                                                                                                        });
-                                                                                                                                                                                    } catch (Exception e) {
-                                                                                                                                                                                        Log.d("timer", e.getMessage());
-                                                                                                                                                                                    }
+                         }
+                         @Override
+                         public void onNext(ResponseMessage responseMessage) {
+                          if (responseMessage.getMessage().equals("something went wrong")) {
+                           timer.scheduleAtFixedRate(new TimerTask() {
+                               @Override
+                               public void run() {
+                         try {
+                         Handler handler = new Handler(Looper.getMainLooper());
+                         handler.post(new Runnable() {
+                             @Override
+                             public void run() {
+                                 signupWithFacebookCall(signupWithFacebookInformation);
+                             }
+                         });
+                         } catch (Exception e) {
+                             Log.d("timer", e.getMessage());
+                         }
 
 
-    }
-                                                                                                                                                                            }, 0, 900000);
+                            }
+                           }, 0, 900000);
  } else {
 editor.putString("ChittiChat_token", responseMessage.getMessage());
 editor.apply();
@@ -327,12 +315,12 @@ startActivity(intent);
             }
             class SignupWithFacebookInformation {
 
-                String facebook_id,firstName,lastName,fb_token;
+                String facebook_id,first_name,last_name,fb_token;
 
                 public SignupWithFacebookInformation(String facebook_id, String firstName, String lastName, String fb_token) {
                     this.facebook_id = facebook_id;
-                    this.firstName = firstName;
-                    this.lastName = lastName;
+                    this.first_name = firstName;
+                    this.last_name = lastName;
                     this.fb_token = fb_token;
                 }
             }

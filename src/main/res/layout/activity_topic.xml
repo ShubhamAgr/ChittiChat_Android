@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/back"
+    android:background="#fdfdf4"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context="in.co.nerdoo.chittichat.TopicActivity">
     <android.support.v7.widget.Toolbar
@@ -37,20 +37,12 @@
 
     </LinearLayout>
     </android.support.v7.widget.Toolbar>
-        <ScrollView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/scrollView">
+        <!--<ScrollView-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:id="@+id/scrollView">-->
 
-            <android.support.v7.widget.RecyclerView
-                android:id="@+id/articles_recycler_view"
-                android:layout_width="match_parent"
-
-                android:layout_height="wrap_content"
-                android:clipToPadding="false"
-                android:scrollbars="vertical" />
-
-        </ScrollView>
+        <!--</ScrollView>-->
 
 
     <LinearLayout
@@ -61,7 +53,8 @@
         android:layout_alignParentLeft="true"
         android:gravity="center|bottom"
         android:layout_centerHorizontal="true"
-        android:weightSum="1">
+        android:weightSum="1"
+        android:id="@+id/linearLayout2">
 
         <EditText
             android:layout_width="252dp"
@@ -84,11 +77,21 @@
             android:text="send"
             android:background="@null"
             android:src="@drawable/ic_send_black_48dp"
-            android:layout_gravity="bottom|right"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentRight="true"
+            android:layout_gravity="bottom|end"
             android:id="@+id/send_button"
             />
     </LinearLayout>
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/articles_recycler_view"
+        android:layout_width="match_parent"
+
+        android:layout_height="wrap_content"
+        android:clipToPadding="false"
+        android:scrollbars="vertical"
+        android:layout_below="@+id/toolbar_articles"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_above="@+id/linearLayout2"/>
 
 </RelativeLayout>

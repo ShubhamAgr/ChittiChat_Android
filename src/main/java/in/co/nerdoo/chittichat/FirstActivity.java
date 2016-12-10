@@ -11,12 +11,14 @@
     import android.graphics.drawable.ColorDrawable;
     import android.os.Bundle;
     import android.speech.RecognizerIntent;
+    import android.support.annotation.Nullable;
     import android.support.design.widget.AppBarLayout;
     import android.support.design.widget.CollapsingToolbarLayout;
     import android.support.v7.app.ActionBar;
     import android.support.v7.app.AppCompatActivity;
     import android.support.v7.widget.DefaultItemAnimator;
     import android.support.v7.widget.GridLayoutManager;
+    import android.support.v7.widget.LinearLayoutManager;
     import android.support.v7.widget.RecyclerView;
     import android.support.v7.widget.Toolbar;
     import android.util.Log;
@@ -37,6 +39,7 @@
     import com.couchbase.lite.Manager;
     import com.couchbase.lite.UnsavedRevision;
     import com.facebook.login.LoginManager;
+    import com.jakewharton.rxbinding.widget.RxTextView;
     import com.squareup.picasso.Picasso;
 
     import org.json.JSONException;
@@ -61,6 +64,7 @@
     import rx.Scheduler;
     import rx.Subscription;
     import rx.android.schedulers.AndroidSchedulers;
+    import rx.functions.Func1;
     import rx.schedulers.Schedulers;
 
 
@@ -90,10 +94,13 @@
         private Toolbar toolbar;
         private final int REQ_CODE_SPEECH_INPUT = 100;
         private Subscription subscription;
+        private InputMethodManager inputMethodManager;
         ActionBar actionBar;
-
+        List<GroupSearchResult> groupSearchResults;
         private static GroupDetail newgroupDetail;
         private  static boolean menuEnabled;
+        private SearchResultsAdapter searchResultsAdapter;
+        private GroupCardAdapter groupCardAdapter;
         @Override
         protected void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
@@ -109,25 +116,25 @@
                 actionBar = getSupportActionBar();
                 actionBar.setHomeButtonEnabled(false);
                 actionBar.setDisplayHomeAsUpEnabled(false);
-
                 initCollapsingToolbar();
+//            if(socket.connected()){
+//                try{
+//                    JSONObject jsonObject = new JSONObject();
+//                    jsonObject.put("token",sharedPreferences.getString("ChittiChat_token","null"));
+//                    socket.emit("authorize",jsonObject);
+//                }catch (JSONException je){
+//                    Log.e("Exception_Authorization",je.getMessage());
+//                }
+//            }
 
+            inputMethodManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
             profile_pic_ImageView = (ImageView)findViewById(R.id.profile_pic);
-
+            recyclerView = (RecyclerView) findViewById(R.id.groups_recycler_view);
+            callRecyclerProperties_one();
             ((ChittichatApp) getApplication()).getMainAppComponent().inject(this);
 
-            recyclerView = (RecyclerView) findViewById(R.id.groups_recycler_view);
-            RecyclerView.LayoutManager layoutManager = new GridLayoutManager(this,2);
-            recyclerView.setLayoutManager(layoutManager);
-            recyclerView.addItemDecoration(new GridSpacingItemDecoration(2,dpToPx(10),true));
-            recyclerView.setItemAnimator(new DefaultItemAnimator());
+
             chittichatServices = retrofit.create(ChittichatServices.class);
-
-
-//            chittichatsearch = (EditText) findViewById(R.id.chittichatsearch);
-//            chittichatsearch.setVisibility(View.GONE);
-
-
               Log.d("profile_pic_url",sharedPreferences.getString("profile_pic_url","default"));
 
                 try{
@@ -162,10 +169,6 @@
                 public void onNext(final List<GroupsList> groupsLists) {
                    Log.d("abcd",groupsLists.get(0).get_id()) ;
                     FirstActivity.groupsList = groupsLists;
-//                    FirstActivity.groupsList = groupsLists;
-//                    Iterator<GroupsList> it = groupsLists.listIterator();
-//                    Map<String,List<GroupsList>> properties  = new HashMap<>();
-//                    properties.put("groupsList",groupsLists);
                     try {
                         groupDocument.update(new Document.DocumentUpdater() {
                             @Override
@@ -189,65 +192,20 @@
                         }
                         getGroupDetails(groupsLists.get(i).get_id());
                     }
-                    GroupCardAdapter groupCardAdapter = new GroupCardAdapter(getApplicationContext(),groupDocument,groupsLists);
-                    recyclerView.setAdapter(groupCardAdapter);
-
-
-
+                    callRecyclerProperties_one();
+                     groupCardAdapter = new GroupCardAdapter(getApplicationContext(),groupDocument,groupsLists);
+                     if(recyclerView.getAdapter()  == null){
+                         recyclerView.setAdapter(groupCardAdapter);
+                     }else if(recyclerView.getAdapter() instanceof GroupCardAdapter){
+                         groupCardAdapter.notifyDataSetChanged();
+                     }else{
+                         recyclerView.swapAdapter(groupCardAdapter,false);//make true
+                     }
 
 
                 }
             });
 
-        }
-        @Override
-        public boolean onCreateOptionsMenu(Menu menu) {
-
-            getMenuInflater().inflate(R.menu.menu_first, menu);
-            if(menuEnabled){
-                for(int i=0; i< menu.size();i++){
-                    menu.getItem(i).setVisible(true);
-                }
-            }else{
-                for(int i=0; i< menu.size();i++){
-                    menu.getItem(i).setVisible(false);
-                }
-            }
-            return true;
-        }
-        @Override
-        public boolean onOptionsItemSelected(MenuItem item) {
-            // Handle action bar item clicks here. The action bar will
-            // automatically handle clicks on the Home/Up button, so long
-            // as you specify a parent activity in AndroidManifest.xml.
-            int id = item.getItemId();
-             switch (id){
-                 case R.id.action_settings:
-                     startActivity(new Intent(FirstActivity.this,SettingsActivity.class));
-                     return true;
-                 case R.id.newGroup:
-                     startActivity(new Intent(FirstActivity.this,CreateNewGroup.class));
-                     return true;
-                 case R.id.editProfile:
-                     startActivity(new Intent(FirstActivity.this,SettingsActivity.class));
-                     return true;
-                 case R.id.fb_logut:
-                     LoginManager.getInstance().logOut();
-                     return true;
-                 case android.R.id.home:
-                     menuEnabled = true;
-                     invalidateOptionsMenu();
-                     actionBar.setBackgroundDrawable(new ColorDrawable(Color.parseColor("#3F51B5")));
-                     actionBar.setHomeButtonEnabled(false);
-                     actionBar.setDisplayHomeAsUpEnabled(false);
-                     mynotificationbutton.setVisibility(View.VISIBLE);
-                     mysearchbutton.setVisibility(View.VISIBLE);
-                     chittichatsearch.setVisibility(View.GONE);
-                     chittichatsearch.setText("");
-                 default:
-//                     Toast.makeText(getApplicationContext(),"Does not match any options",Toast.LENGTH_SHORT).show();
-             }
-            return super.onOptionsItemSelected(item);
         }
         private  void getGroupDetails(final String groupId) {
             Log.d("cccc",groupId);
@@ -288,26 +246,136 @@
                 }
             });
         }
-        private  void search(String query) {
-            Observable<ResponseMessage> getSearchResults = chittichatServices.getResponseOnSearch(query);
-            getSearchResults.subscribeOn(Schedulers.newThread()).debounce(3, TimeUnit.SECONDS).observeOn(AndroidSchedulers.mainThread()).subscribe
-                    (new Observer<ResponseMessage>() {
+        private void search(){
+            Observable<String> searchText = RxTextView.textChanges(chittichatsearch).filter(new Func1<CharSequence, Boolean>() {
+                @Override
+                public Boolean call(CharSequence charSequence) {
+                    return (charSequence.length()>3);
+                }
+            }).debounce(300,TimeUnit.MILLISECONDS).map(new Func1<CharSequence, String>() {
+                @Override
+                public String call(CharSequence charSequence) {
+                    return charSequence.toString();
+                }
+            });
+            searchText.subscribe(new Observer<String>() {
                 @Override
                 public void onCompleted() {
-
+                    Log.d("Search","Completed");
                 }
 
                 @Override
                 public void onError(Throwable e) {
-
+                    Log.e("Search",e.getMessage());
                 }
 
                 @Override
-                public void onNext(ResponseMessage responseMessage) {
+                public void onNext(String query) {
+                    Log.i("Query",query);
+                    SearchRequest searchRequest = new SearchRequest(query);
+                    Observable<List<GroupSearchResult>> getSearchGroupsResults = chittichatServices.getResponseOnSearchGroups(searchRequest);
+                    getSearchGroupsResults.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<List<GroupSearchResult>>
+                            () {
+                        @Override
+                        public void onCompleted() {
+                            Log.i("SearchRequest","completed");
+                        }
 
+                        @Override
+                        public void onError(Throwable e) {
+
+                        }
+
+                        @Override
+                        public void onNext(List<GroupSearchResult> groupSearchResults) {
+
+                           searchResultsAdapter = new SearchResultsAdapter(groupSearchResults);
+                            callRecyclerProperties_two();
+                            if(recyclerView.getAdapter() == null){
+                                recyclerView.setAdapter(searchResultsAdapter);//make true
+                            }else if (recyclerView.getAdapter() instanceof SearchResultsAdapter){
+                                searchResultsAdapter.notifyDataSetChanged();
+                            } else {
+                                recyclerView.swapAdapter(searchResultsAdapter,false);//make true
+                            }
+
+                        }
+                    });
                 }
             });
         }
+
+        private  void callRecyclerProperties_one(){
+            RecyclerView.LayoutManager layoutManager = new GridLayoutManager(this,2);
+            recyclerView.setLayoutManager(layoutManager);
+//            recyclerView.addItemDecoration(new GridSpacingItemDecoration(2,dpToPx(10),true));
+//            recyclerView.setItemAnimator(new DefaultItemAnimator());
+        }
+
+        private  void callRecyclerProperties_two(){
+            RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
+            recyclerView.setHasFixedSize(true);
+            recyclerView.setLayoutManager(layoutManager);
+        }
+        @Override
+        public boolean onCreateOptionsMenu(Menu menu) {
+
+            getMenuInflater().inflate(R.menu.menu_first, menu);
+            if(menuEnabled){
+                for(int i=0; i< menu.size();i++){
+                    menu.getItem(i).setVisible(true);
+                }
+            }else{
+                for(int i=0; i< menu.size();i++){
+                    menu.getItem(i).setVisible(false);
+                }
+            }
+            return true;
+        }
+        @Override
+        public boolean onOptionsItemSelected(MenuItem item) {
+
+            int id = item.getItemId();
+             switch (id){
+                 case R.id.action_settings:
+                     startActivity(new Intent(FirstActivity.this,SettingsActivity.class));
+                     return true;
+                 case R.id.newGroup:
+                     startActivity(new Intent(FirstActivity.this,CreateNewGroup.class));
+                     return true;
+                 case R.id.suggest:
+                     startActivity(new Intent(FirstActivity.this,Group_suggestions.class));
+
+                 case R.id.fb_logut:
+                     LoginManager.getInstance().logOut();
+                     return true;
+                 case android.R.id.home:
+                     menuEnabled = true;
+                     invalidateOptionsMenu();
+
+                     actionBar.setHomeButtonEnabled(false);
+                     actionBar.setDisplayHomeAsUpEnabled(false);
+                     mynotificationbutton.setVisibility(View.VISIBLE);
+                     mysearchbutton.setVisibility(View.VISIBLE);
+                     chittichatsearch.setVisibility(View.GONE);
+                     chittichatsearch.setText("");
+                     //
+                     callRecyclerProperties_one();
+                     if(recyclerView.getAdapter()  == null){
+                         recyclerView.setAdapter(groupCardAdapter);
+                     }else if(recyclerView.getAdapter() instanceof GroupCardAdapter){
+                         groupCardAdapter.notifyDataSetChanged();
+                     }else{
+                         recyclerView.swapAdapter(groupCardAdapter,false);//make true
+                     }
+                     //
+                     inputMethodManager.toggleSoftInput(InputMethodManager.SHOW_FORCED,0);
+                 default:
+//                     Toast.makeText(getApplicationContext(),"Does not match any options",Toast.LENGTH_SHORT).show();
+             }
+            return super.onOptionsItemSelected(item);
+        }
+
 
         @Override
         protected void onResume(){
@@ -319,7 +387,7 @@
         @Override
         protected void onDestroy() {
             super.onDestroy();
-            if(socket.connected()) {
+            if(socket.connected()&& (groupsList != null)) {
                 Iterator<GroupsList> it = groupsList.listIterator();
                 while (it.hasNext()) {
                     JSONObject joinRoomrequest = new JSONObject();
@@ -374,18 +442,26 @@
         }
 
         public void onClickSearchButton(View view) {
-
-            menuEnabled = false;
-            invalidateOptionsMenu();
-            actionBar.setHomeAsUpIndicator(R.drawable.ic_arrow_back_black_24dp);
-            actionBar.setBackgroundDrawable(new ColorDrawable(0xffffffff));
-            actionBar.setHomeButtonEnabled(true);
-            actionBar.setDisplayHomeAsUpEnabled(true);
             mynotificationbutton.setVisibility(View.GONE);
             mysearchbutton.setVisibility(View.GONE);
+            menuEnabled = false;
+            invalidateOptionsMenu();
+
+            actionBar.setHomeAsUpIndicator(R.drawable.ic_arrow_back_black_24dp);
+            actionBar.setHomeButtonEnabled(true);
+            actionBar.setDisplayHomeAsUpEnabled(true);
             chittichatsearch.setVisibility(View.VISIBLE);
             chittichatsearch.requestFocus();
-            InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            searchResultsAdapter = new SearchResultsAdapter(groupSearchResults);
+            callRecyclerProperties_two();
+//            if(recyclerView.getAdapter() == null){
+//                recyclerView.setAdapter(searchResultsAdapter);//make true
+//            }else if (recyclerView.getAdapter() instanceof SearchResultsAdapter){
+//                searchResultsAdapter.notifyDataSetChanged();
+//            } else {
+//                recyclerView.swapAdapter(searchResultsAdapter,false);//make true
+//            }
+            search();
             inputMethodManager.toggleSoftInput(InputMethodManager.SHOW_FORCED,0);
         }
 
@@ -429,9 +505,9 @@
          * Will show and hide the toolbar title on scroll
          */
         private void initCollapsingToolbar() {
-            final CollapsingToolbarLayout collapsingToolbar =
-                    (CollapsingToolbarLayout) findViewById(R.id.toolbar_layout);
-            collapsingToolbar.setTitle("Shubham");//setTo user name or First name.....
+            final CollapsingToolbarLayout collapsingToolbar = (CollapsingToolbarLayout) findViewById(R.id.toolbar_layout);
+
+//            collapsingToolbar.setTitle("");//sharedPreferences.getString("first_name","------"));//setTo user name or First name.....
 
 
             AppBarLayout appBarLayout = (AppBarLayout) findViewById(R.id.app_bar);
@@ -446,16 +522,25 @@
                 public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
                     if (scrollRange == -1) {
                         scrollRange = appBarLayout.getTotalScrollRange();
-                        actionBar.hide();
-//                        collapsingToolbar.setTitle("Shubham");
+                        collapsingToolbar.setTitle(sharedPreferences.getString("first_name","------"));
+                        mynotificationbutton.setVisibility(View.GONE);
+                        mysearchbutton.setVisibility(View.GONE);
+                        menuEnabled = false;
+                        invalidateOptionsMenu();
                     }
                     if (scrollRange + verticalOffset == 0) {
                         collapsingToolbar.setTitle(getString(R.string.app_name));
-                        actionBar.show();
+                        menuEnabled = true;
+                        invalidateOptionsMenu();
+                        mynotificationbutton.setVisibility(View.VISIBLE);
+                        mysearchbutton.setVisibility(View.VISIBLE);
                         isShow = true;
                     } else if (isShow) {
-                        actionBar.hide();
-                        collapsingToolbar.setTitle("Shubham");
+                        collapsingToolbar.setTitle(sharedPreferences.getString("first_name","------"));
+                        mynotificationbutton.setVisibility(View.GONE);
+                        mysearchbutton.setVisibility(View.GONE);
+                        menuEnabled = false;
+                        invalidateOptionsMenu();
                         isShow = false;
                     }
                 }
@@ -509,7 +594,55 @@
             return Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, r.getDisplayMetrics()));
         }
 
+
+
     }
+
+   class GroupSearchResult{
+       String _id;
+       String group_name;
+       String group_about;
+       String knock_knock_question;
+
+       public String getGroup_about() {
+           return group_about;
+       }
+
+       public void setGroup_about(String group_about) {
+           this.group_about = group_about;
+       }
+
+       public String getKnock_knock_question() {
+           return knock_knock_question;
+       }
+
+       public void setKnock_knock_question(String knock_knock_question) {
+           this.knock_knock_question = knock_knock_question;
+       }
+
+       public String get_id() {
+           return _id;
+       }
+
+       public void set_id(String _id) {
+           this._id = _id;
+       }
+
+       public String getGroup_name() {
+           return group_name;
+       }
+
+       public void setGroup_name(String group_name) {
+           this.group_name = group_name;
+       }
+   }
+    class SearchRequest{
+       String query;
+
+       public SearchRequest(String query) {
+           this.query = query;
+       }
+   }
 
 
 

@@ -6,8 +6,9 @@
     <string name="speech_prompt">Speak Now</string>
     <string name="speech_not_supported">Sorry! Your device doesnt support speech input</string>
     <string name="action_settings">Settings</string>
-    <string name="action_newGroup">Create New Group</string>
-    <string name="action_editProfile">Edit Profile</string>
+    <string name="action_newGroup">New group</string>
+    <string name="action_editProfile">Edit profile</string>
+    <string name="action_suggestGroup">Find groups</string>
     <string name="title_activity_group">GroupActivity</string>
     <string name="section_format">Hello World from section: %1$d</string>
     <string name="title_activity_settings">Settings</string>

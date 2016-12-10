@@ -13,12 +13,19 @@ import android.provider.MediaStore;
 import android.support.v4.content.CursorLoader;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Toast;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
+import java.util.List;
 
 import javax.inject.Inject;
 
@@ -49,7 +56,8 @@ public class TopicActivity extends AppCompatActivity {
     private  static ChittichatServices chittichatServices;
     private EditText articleContent;
     private int PICK_IMAGE_REQUEST = 1;
-    private int GALLERY_KITKAT_INTENT_CALLED=2;
+    private List<Articles> articlesList;
+    private static RecyclerView recyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,7 +78,54 @@ public class TopicActivity extends AppCompatActivity {
             topicId = extras.getString("TopicId");
             token = sharedPreferences.getString("ChittiChat_token",null);
         }
+        socket.on("newarticle",onNewArticle);
+//        if(socket.connected()){
+//            socket.disconnect();
+//
+//            socket.connect();
+//        }else {
+//            socket.on("newarticle",onNewArticle);
+//            socket.connect();
+//        }
+
         chittichatServices = retrofit.create(ChittichatServices.class);
+        recyclerView = (RecyclerView) findViewById(R.id.articles_recycler_view);
+//        recyclerView.setHasFixedSize(true);
+        LinearLayoutManager manager = new LinearLayoutManager(this);
+        manager.setStackFromEnd(true);
+        manager.setReverseLayout(true);
+        recyclerView.setLayoutManager(manager);
+        getArticle(token,topicId,"0_5");
+
+
+    }
+
+    private void getArticle(String token,String topicId,String range){
+        Observable<List<Articles>> getArticles = chittichatServices.getResponseOnArticles(token,topicId,range);
+        getArticles.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<List<Articles>>() {
+            @Override
+            public void onCompleted() {
+
+            }
+
+            @Override
+            public void onError(Throwable e) {
+
+            }
+
+            @Override
+            public void onNext(List<Articles> articles) {
+                try {
+                    ArticleAdapter adapter = new ArticleAdapter(articles);
+                    recyclerView.setAdapter(adapter);
+                    recyclerView.scrollToPosition(0);
+                }catch (Exception e){
+                    Log.e("ArticleEx:",e.getMessage());
+                }
+
+//                Log.d("Chittichat_Articles",articles.get(0).get_id());
+            }
+        });
 
     }
     public void onaddImage(View view){
@@ -124,28 +179,6 @@ public class TopicActivity extends AppCompatActivity {
         }
     }
 
-    private  void fetchArticles(final String range){
-        Observable<Articles> getArticles = chittichatServices.getResponseOnArticles(token,topicId,range);
-        getArticles.subscribeOn(Schedulers.newThread()).subscribeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<Articles>() {
-            @Override
-            public void onCompleted() {
-
-            }
-
-            @Override
-            public void onError(Throwable e) {
-
-            }
-
-            @Override
-            public void onNext(Articles articles) {
-
-            }
-        });
-
-    }
-
-
     private void postArticle(ArticleInformation articleInformation ){
         Observable<ResponseMessage> getResponseOnArticleUpload = chittichatServices.getResponseOnPostArticle(articleInformation);
         getResponseOnArticleUpload.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<ResponseMessage>() {
@@ -176,12 +209,6 @@ public class TopicActivity extends AppCompatActivity {
 
 
     private void postImage(Uri imageUri){
-//        File file = new File(imageUri.getPath());
-//        RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"),file);
-//        MultipartBody.Part body = MultipartBody.Part.createFormData("name",file.getName(),requestFile);
-//        String descriptionString = token +","+topicId;
-//        RequestBody description = RequestBody.create(MediaType.parse("multipart/form-data"),descriptionString);
-
         String path = getPathFromURI(imageUri);
         if(path.equals("")){
                 Log.d("imageUri",imageUri.toString());
@@ -194,40 +221,25 @@ public class TopicActivity extends AppCompatActivity {
             RequestBody mytoken = RequestBody.create(MediaType.parse("text/plain"), token);
             RequestBody mtopicId = RequestBody.create(MediaType.parse("text/plain"), topicId);
 
-            Call<ResponseMessage> call = chittichatServices.getResponseOnPostImage(fbody,mytoken,mtopicId);
-            call.enqueue(new Callback<ResponseMessage>() {
-                @Override
-                public void onResponse(Call<ResponseMessage> call, Response<ResponseMessage> response) {
-                    Log.d("Image",response.body().getMessage());
-                }
+            Observable<ResponseMessage> getResponseOnImageUpload = chittichatServices.getResponseOnPostImage(fbody,mytoken,mtopicId);
+             getResponseOnImageUpload.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<ResponseMessage>() {
+                 @Override
+                 public void onCompleted() {
+                     Log.d("PostImage","completed");
+                 }
 
-                @Override
-                public void onFailure(Call<ResponseMessage> call, Throwable t) {
-//                    Log.d("Image",t.getMessage());
-                }
-            });
+                 @Override
+                 public void onError(Throwable e) {
+                    Log.e("PostImage",e.getMessage());
+                 }
+
+                 @Override
+                 public void onNext(ResponseMessage responseMessage) {
+                     Log.d("Image",responseMessage.getMessage());
+                 }
+             });
+
         }
-
-
-//        Observable<ResponseMessage> getResponseOnImageUpload = chittichatServices.getResponseOnPostImage(body,description);
-//        getResponseOnImageUpload.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<ResponseMessage>() {
-//            @Override
-//            public void onCompleted() {
-//                Log.e("ImageUpload","completed");
-//            }
-//
-//            @Override
-//            public void onError(Throwable e) {
-//                Log.e("ImageUpload",e.getMessage());
-//
-//            }
-//
-//            @Override
-//            public void onNext(ResponseMessage responseMessage) {
-//                Log.e("ImageUpload",responseMessage.getMessage());
-//            }
-//        });
-
     }
 
     private void postVideo(Uri videoUri){
@@ -280,47 +292,40 @@ public class TopicActivity extends AppCompatActivity {
         });
     }
 
-    private void socketMethods(){
-        socket.on("newimage",new Emitter.Listener(){
-            @Override
-            public void call(Object... args){
 
-            }
-        });
-        socket.on("newarticle",new Emitter.Listener(){
-            @Override
-            public void call(Object... args){
+    private  Emitter.Listener onNewArticle  =  new Emitter.Listener() {
+        @Override
+        public void call(final Object... args) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    JSONObject data = (JSONObject) args[0];
+                    try {
 
-            }
-        });
-        socket.on("newvideo",new Emitter.Listener(){
-            @Override
-            public void call(Object... args){
+//                        Toast.makeText(getApplicationContext(),"kuch to hua",Toast.LENGTH_SHORT).show();
+                        ;
+                        Log.i("aabccccdsfds",data.getString("articleId"));
+                        getArticle(token,topicId,"0_5");
+                    }catch (Exception e) {
+                        Log.e("Socket Exception",e.getMessage());
+                    }
+                }
+            });
+        }
+    };
 
-            }
-        });
-        socket.on("newaudio",new Emitter.Listener(){
-            @Override
-            public void call(Object... args){
-
-            }
-        });
-
-        socket.on("newmember",new Emitter.Listener(){
-           @Override
-            public void call(Object... args){
-
-           }
-        });
-    }
 
     public void onClickSend(View view){
         //upload your articles....
         String text = articleContent.getText().toString();
+        articleContent.setText("");
         if(!text.equals("")){
             Log.d("Article",text);
+            Log.d("TopicId",topicId+"abbb");
             ArticleInformation articleInformation = new ArticleInformation(token,topicId,text);
             postArticle(articleInformation);
+
+
         }
 
     }
@@ -328,11 +333,11 @@ public class TopicActivity extends AppCompatActivity {
 }
 
 class  ArticleInformation{
-    String token,topicId,article_content;
+    String token,topic_id,article_content;
 
     public ArticleInformation(String token, String topicId, String article_content) {
         this.token = token;
-        this.topicId = topicId;
+        this.topic_id = topicId;
         this.article_content = article_content;
     }
 }

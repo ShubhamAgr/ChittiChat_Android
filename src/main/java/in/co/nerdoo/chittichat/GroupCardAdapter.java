@@ -3,6 +3,7 @@ package in.co.nerdoo.chittichat;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -84,9 +85,12 @@ public class GroupCardAdapter extends RecyclerView.Adapter<GroupCardAdapter.View
             if(pic_url.equals("default")){
                 Picasso.with(group_profile_context).load(R.drawable.group_icon_black).into(holder.group_profile_pic);
             }else{
-                Picasso.with(group_profile_context).load(pic_url).into(holder.group_profile_pic);
+                Picasso.with(group_profile_context).load("http://ec2-35-160-113-29.us-west-2.compute.amazonaws.com/images/"+pic_url).into(holder.group_profile_pic);
             }
-
+            holder.group_notification.setEllipsize(TextUtils.TruncateAt.END);
+            holder.group_notification.setMaxLines(1);
+            holder.group_title.setEllipsize(TextUtils.TruncateAt.END);
+            holder.group_title.setMaxLines(1);
             holder.group_notification.setText(((String)properties.get(groupId+"motivation")));//properties.get(mDataset.get(position).get_id())));
             holder.group_title.setText((String)properties.get(groupId+"name"));
 

@@ -54,7 +54,7 @@ public class ShowTopics extends AppCompatActivity {
         ((ChittichatApp) getApplication()).getMainAppComponent().inject(this);
 
 
-       chittichatServices  = retrofit.create(ChittichatServices.class);
+        chittichatServices  = retrofit.create(ChittichatServices.class);
         recyclerView = (RecyclerView) findViewById(R.id.topics_recycler_view);
         recyclerView.setHasFixedSize(true);
         layoutManager = new LinearLayoutManager(this);

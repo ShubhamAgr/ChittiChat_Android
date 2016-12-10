@@ -2,20 +2,21 @@
       xmlns:app="http://schemas.android.com/apk/res-auto"
       xmlns:tools="http://schemas.android.com/tools"
       tools:context="in.co.nerdoo.chittichat.FirstActivity">
-    <item
-        android:id="@+id/action_settings"
-        android:orderInCategory="100"
-        android:title="@string/action_settings"
-        app:showAsAction="never"/>
+
     <item
         android:id="@+id/newGroup"
         android:orderInCategory="100"
         android:title="@string/action_newGroup"
         app:showAsAction="never"/>
     <item
-        android:id="@+id/editProfile"
+        android:id="@+id/suggest"
         android:orderInCategory="100"
-        android:title="@string/action_editProfile"
+        android:title="@string/action_suggestGroup"
+        app:showAsAction="never"/>
+    <item
+        android:id="@+id/action_settings"
+        android:orderInCategory="100"
+        android:title="@string/action_settings"
         app:showAsAction="never"/>
     <item
         android:id="@+id/fb_logut"

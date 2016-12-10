@@ -32,7 +32,6 @@ public class NetModule {
     public NetModule(String baseUrl) {
         this.baseUrl = baseUrl;
     }
-
     //okhttp cache
     @Provides @Singleton
     Cache providesOkHttp(ChittichatApp application) {
@@ -124,7 +123,6 @@ public class NetModule {
                     Log.i("room left","true");
                 }
             });
-
             socket.connect();
 
         }

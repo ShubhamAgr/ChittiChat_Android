@@ -16,6 +16,8 @@ import rx.Observable;
 /**
  * Created by shubham on 8/11/16.
  */
+
+
 public interface ChittichatServices {
 
     //Login Related Urls...
@@ -41,7 +43,7 @@ public interface ChittichatServices {
     //Groups Related Urls
 
     @POST("/newGroup")
-    Observable<ResponseMessage> getResponseOnNewGroup(@Body NewGroupInformation newGroupInformation);
+    Observable<ResponseOnNewGroup> getResponseOnNewGroup(@Body NewGroupInformation newGroupInformation);
 
     @GET("/groups/{token}")
     Observable<List<GroupsList>> getResponseOnGroups(@Path("token") String token);
@@ -85,7 +87,10 @@ public interface ChittichatServices {
     // Param
 
     @GET("articles/{token}/{topicId}/{range}")
-    Observable<Articles> getResponseOnArticles(@Path("token") String token,@Path("topicId") String topicId,@Path("range") String range);
+    Observable<List<Articles>> getResponseOnArticles(@Path("token") String token,@Path("topicId") String topicId,@Path("range") String range);
+
+
+
     //pass token, topicId and
     // range Param
 
@@ -94,9 +99,14 @@ public interface ChittichatServices {
 
     @Multipart
     @POST("image")
-    Call<ResponseMessage> getResponseOnPostImage(@Part("file\"; filename=\"pp.png\" ") RequestBody file, @Part("token") RequestBody token,
+    Observable<ResponseMessage> getResponseOnPostImage(@Part("file\"; filename=\"pp.png\" ") RequestBody file, @Part("token") RequestBody token,
                                                  @Part("topicId") RequestBody id);
 
+
+    @Multipart
+    @POST("updateGroupProfilepic")
+    Observable<ResponseMessage> getResponseOnGroupImage(@Part("file\"; filename=\"pp.png\" ") RequestBody file, @Part("token") RequestBody token,
+                                                       @Part("groupId") RequestBody id);
     @Multipart
     @POST("groupImage")
     Observable<ResponseMessage> getResponseOnPostGroupImage(@Part("image") MultipartBody.Part image, @Part("description") RequestBody description);
@@ -116,8 +126,11 @@ public interface ChittichatServices {
     @POST("search")
     Observable<ResponseMessage> getResponseOnSearch(@Body String query);
 
-    //Administrative controls urls
+    @POST("searchGroups")
+    Observable<List<GroupSearchResult>> getResponseOnSearchGroups(@Body SearchRequest searchRequest);
 
+    //Administrative controls urls
+           
     @POST("addMember")
     Observable<ResponseMessage>  getResponseOnAddMember();
 

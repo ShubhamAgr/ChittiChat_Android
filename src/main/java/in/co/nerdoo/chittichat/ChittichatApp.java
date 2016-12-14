@@ -48,38 +48,9 @@ public class ChittichatApp extends Application {
     @Override
     public void onTerminate(){
         super.onTerminate();
-
-        if(socket.connected()){
-            //send socket to delete user id
-            try{
-
-                JSONObject jsonObject = new JSONObject();
-                jsonObject.put("token",sharedPreferences.getString("Chittichat_token","null"));
-                socket.emit("app_close",jsonObject);
-
-            }catch (JSONException je){
-
-                Log.e("app_close exception",je.getMessage());
-
-            }
-
-        }else{
-            socket.connect();
-            try{
-
-                JSONObject jsonObject = new JSONObject();
-                jsonObject.put("token",sharedPreferences.getString("ChittiChat_token","null"));
-                socket.emit("app_close",jsonObject);
-
-            }catch (JSONException je){
-
-                Log.e("app_close exception",je.getMessage());
-
-            }
-        }
+        Log.d("onTerminate","Invoked");
 
     }
-
 
     @Override
     public void onLowMemory(){

@@ -99,7 +99,10 @@ public class ArticleAdapter extends RecyclerView.Adapter<ArticleAdapter.ViewHold
     public void onBindViewHolder(final ViewHolder holder, int position) {
         switch (holder.getItemViewType()) {
             case TEXT:
-                holder.username_article1.setText(articles.get(position).get_id());
+                if(articles.get(position).getUsername() != null){
+                    holder.username_article1.setText(articles.get(position).getUsername());
+                }
+
                 holder.article_content.setText(articles.get(position).getArticle_content());
                 break;
             case IMAGE:

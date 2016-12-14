@@ -41,6 +41,11 @@ public class GroupCardAdapter extends RecyclerView.Adapter<GroupCardAdapter.View
         public void onClick(final View v) {
             Intent intent = new Intent(viewContext,ShowTopics.class);
             intent.putExtra("groupId",mDataset.get(getPosition()).get_id());
+            if(mDataset.get(getPosition()).getRole().equals("administrator") || mDataset.get(getPosition()).getRole().equals("member")){
+                intent.putExtra("ShowEdittext",true);
+            }else{
+                intent.putExtra("ShowEdittext",false);
+            }
             viewContext.startActivity(intent);
         }
 
@@ -102,6 +107,13 @@ public class GroupCardAdapter extends RecyclerView.Adapter<GroupCardAdapter.View
 
     @Override
     public int getItemCount() {
-        return mDataset.size();
+        if(mDataset == null){
+            return 0;
+        }else if(mDataset.isEmpty()){
+            return 0;
+        }else {
+            return mDataset.size();
+        }
+
     }
 }

@@ -53,13 +53,13 @@ public interface ChittichatServices {
 
 
     @POST("/newRequest")
-    Observable<ResponseMessage> getResponseOnNewRequest(@Body String token, @Body String groupId, @Body String knockknockAnswer);
+    Observable<ResponseMessage> getResponseOnNewRequest(@Body NewRequestInformation newRequestInformation);
 
-    @GET("/followGroup/{token}/{groupId}")
-    Observable<ResponseMessage> getResponseOnFollowingGroup(@Path("token") String token,@Path("groupId") String groupId);
+    @GET("/followGroup/{token}/{groupid}")
+    Observable<ResponseMessage> getResponseOnFollowingGroup(@Path("token") String token,@Path("groupid") String groupId);
 
-    @GET("/unfollowGroup/{token}/{groupId}")
-    Observable<ResponseMessage> getResponseOnUnFollowingGroup(@Path("token") String token, @Path("groupId") String groupId);
+    @GET("/unfollowGroup/{token}/{groupid}")
+    Observable<ResponseMessage> getResponseOnUnFollowingGroup(@Path("token") String token, @Path("groupid") String groupId);
     // groupId
 
     @GET("/members/{token}/{groupId}")
@@ -139,5 +139,12 @@ public interface ChittichatServices {
 
     @POST("deleteContent")
     Observable<ResponseMessage> getResponseOnDeleteContent();
+
+    ///
+    @GET("getArticleByArticleId/{article_id}")
+    Observable<List<Articles>>  getArticles(@Path("article_id") String article_id);
+
+    @GET("getUsernameByUserId/{user_id}")
+    Observable<Username> getUsername(@Path("user_id") String user_id);
 
 }

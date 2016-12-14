@@ -10,8 +10,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="center"
-        android:layout_margin="@dimen/card_margin"
-        android:elevation="3dp"
+        android:layout_marginBottom="1dp"
+        android:elevation="1dp"
         card_view:cardCornerRadius="@dimen/card_album_radius">
         <RelativeLayout
             android:layout_width="match_parent"
@@ -23,7 +23,7 @@
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceLarge"
                 android:text="TopicTitle"
-                android:gravity="center"
+                android:gravity="left"
                 android:id="@+id/topic_title"
                 android:layout_alignParentTop="true"
                 android:layout_alignParentLeft="true"

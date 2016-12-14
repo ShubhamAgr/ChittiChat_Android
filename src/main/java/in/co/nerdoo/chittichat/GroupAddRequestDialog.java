@@ -3,6 +3,7 @@ package in.co.nerdoo.chittichat;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
@@ -14,6 +15,10 @@ import android.widget.TextView;
 import javax.inject.Inject;
 
 import retrofit2.Retrofit;
+import rx.Observable;
+import rx.Observer;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 
 /**
  * Created by shubham on 10/12/16.
@@ -21,6 +26,8 @@ import retrofit2.Retrofit;
 public class GroupAddRequestDialog extends DialogFragment {
     @Inject
     Retrofit retrofit;
+    @Inject
+    SharedPreferences sharedPreferences;
     ChittichatServices chittichatServices;
     TextView knockKnockQuestion;
     EditText knockKnockAnswer;
@@ -30,25 +37,51 @@ public class GroupAddRequestDialog extends DialogFragment {
         ((ChittichatApp) getActivity().getApplication()).getMainAppComponent().inject(this);AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         chittichatServices = retrofit.create(ChittichatServices.class);
 
-        // Get the layout inflater
+
         LayoutInflater inflater = getActivity().getLayoutInflater();
         final View promptView = inflater.inflate(R.layout.group_request_dialog_request,null);
-        knockKnockQuestion = (TextView) promptView.findViewById(R.id.knockKnockAnswer_request);
-        knockKnockQuestion.setText("ali alibaba  aliii alibaba");
-        builder.setTitle("Knock Knock");
-        // Inflate and set the layout for the dialog
-        // Pass null as the parent view because its going in the dialog layout
+
+        builder.setMessage(sharedPreferences.getString("group_question","----"));
         builder.setView(promptView)
-                // Add action buttons
-                .setPositiveButton("Add", new DialogInterface.OnClickListener() {
+                .setPositiveButton("Join", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         knockKnockAnswer = (EditText) promptView.findViewById(R.id.knockKnockAnswer_request);
-//                        Log.i("abcd",heading.getText().toString()+details.getText().toString());
+                        NewRequestInformation newRequestInformation = new NewRequestInformation(sharedPreferences.getString("ChittiChat_token",
+                                null),sharedPreferences.getString("currentGroupId",null),knockKnockAnswer.getText().toString());
+                        postNewRequest(newRequestInformation);
                     }
                 });
 
         return builder.create();
 
+    }
+    public void postNewRequest(NewRequestInformation newRequestInformation){
+        Observable<ResponseMessage> newRequest = chittichatServices.getResponseOnNewRequest(newRequestInformation);
+        newRequest.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<ResponseMessage>() {
+            @Override
+            public void onCompleted() {
+
+            }
+
+            @Override
+            public void onError(Throwable e) {
+
+            }
+
+            @Override
+            public void onNext(ResponseMessage responseMessage) {
+
+            }
+        });
+    }
+}
+class NewRequestInformation{
+    private String token,group_id,answer;
+
+    public NewRequestInformation(String token, String group_id, String answer) {
+        this.token = token;
+        this.group_id = group_id;
+        this.answer = answer;
     }
 }

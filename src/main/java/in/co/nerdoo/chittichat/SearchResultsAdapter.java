@@ -27,10 +27,10 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
         @Override
         public void onClick(View v) {
             Intent intent = new Intent(viewContext,showUsersOrGroupsActivity.class);
-            intent.putExtra("GroupId",searchLists.get(getPosition()).get_id());
-            intent.putExtra("Question",searchLists.get(getPosition()).getKnock_knock_question());
-            intent.putExtra("GroupName",searchLists.get(getPosition()).getGroup_name());
-            intent.putExtra("GroupAbout",searchLists.get(getPosition()).getGroup_about());
+            intent.putExtra("groupId",searchLists.get(getPosition()).get_id());
+            intent.putExtra("question",searchLists.get(getPosition()).getKnock_knock_question());
+            intent.putExtra("groupName",searchLists.get(getPosition()).getGroup_name());
+            intent.putExtra("groupAbout",searchLists.get(getPosition()).getGroup_about());
             viewContext.startActivity(intent);
         }
     }
@@ -52,7 +52,14 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
 
 
     @Override
-    public int getItemCount() {
-        return searchLists.size();
+    public int getItemCount(){
+        if(searchLists == null){
+            return 0;
+        }else if(searchLists.isEmpty()){
+            return 0;
+        }else {
+            return searchLists.size();
+        }
+
     }
 }

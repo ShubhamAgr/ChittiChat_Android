@@ -9,7 +9,7 @@
         app:showAsAction="never"/>
 
     <item
-        android:id="@+id/unfollow"
+        android:id="@+id/action_unfollow"
         android:orderInCategory="100"
         android:title="Unfollow"
         app:showAsAction="never"/>

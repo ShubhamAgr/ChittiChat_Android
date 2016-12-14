@@ -19,6 +19,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import org.json.JSONException;
@@ -58,17 +59,19 @@ public class TopicActivity extends AppCompatActivity {
     private int PICK_IMAGE_REQUEST = 1;
     private List<Articles> articlesList;
     private static RecyclerView recyclerView;
-
+    private static Boolean ShowEdittext;
+    private  static LinearLayout sendTextLayout;
+    private  static ArticleAdapter articleAdapter;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_topic);
         articleContent = (EditText) findViewById(R.id.articleText);
+        sendTextLayout = (LinearLayout)findViewById(R.id.linearLayout2) ;
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_articles);
-        toolbar.setTitle("Articles");
+        toolbar.setTitle("Chats");
         toolbar.showOverflowMenu();
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         ((ChittichatApp) getApplication()).getMainAppComponent().inject(this);
 
         Bundle extras = getIntent().getExtras();
@@ -76,17 +79,31 @@ public class TopicActivity extends AppCompatActivity {
             topicId = null;
         }else{
             topicId = extras.getString("TopicId");
+            ShowEdittext = extras.getBoolean("ShowEdittext");
             token = sharedPreferences.getString("ChittiChat_token",null);
         }
+        if(!ShowEdittext){
+            sendTextLayout.setVisibility(View.GONE);
+        }
+        socket.connect();
+        JSONObject joinRoom = new JSONObject();
+        try{
+            joinRoom.put("token",sharedPreferences.getString("ChittiChat_token",null));
+            joinRoom.put("room_id",topicId);
+            socket.emit("joinRoom",joinRoom);
+        }catch (JSONException e){
+            Log.e("problem",e.getMessage());
+        }
+        if(socket.connected()){
+            try{
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("token",sharedPreferences.getString("ChittiChat_token","null"));
+                socket.emit("authorize",jsonObject);
+            }catch (JSONException je){
+                Log.e("Exception_Authorization",je.getMessage());
+            }
+        }
         socket.on("newarticle",onNewArticle);
-//        if(socket.connected()){
-//            socket.disconnect();
-//
-//            socket.connect();
-//        }else {
-//            socket.on("newarticle",onNewArticle);
-//            socket.connect();
-//        }
 
         chittichatServices = retrofit.create(ChittichatServices.class);
         recyclerView = (RecyclerView) findViewById(R.id.articles_recycler_view);
@@ -98,6 +115,69 @@ public class TopicActivity extends AppCompatActivity {
         getArticle(token,topicId,"0_5");
 
 
+    }
+
+    @Override
+    public  void onPause(){
+        super.onPause();
+        socket.connect();
+        JSONObject joinRoomrequest = new JSONObject();
+        try {
+            joinRoomrequest.put("room_id", topicId);
+            joinRoomrequest.put("token",sharedPreferences.getString("ChittiChat_token","null"));
+            socket.emit("leaveRoom", joinRoomrequest);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        if(socket.connected()){
+            try{
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("token",sharedPreferences.getString("ChittiChat_token","null"));
+                socket.emit("app_close",jsonObject);
+            }catch (JSONException je){
+                Log.e("Exception_Authorization",je.getMessage());
+            }
+        }
+    }
+    @Override
+    public void  onStop(){
+        super.onStop();
+
+    }
+    @Override
+    public void onResume(){
+        super.onResume();
+        socket.connect();
+        JSONObject joinRoom = new JSONObject();
+        try{
+            joinRoom.put("token",sharedPreferences.getString("ChittiChat_token",null));
+            joinRoom.put("room_id",topicId);
+            socket.emit("joinRoom",joinRoom);
+        }catch (JSONException e){
+            Log.e("problem",e.getMessage());
+        }
+        if(socket.connected()){
+            try{
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("token",sharedPreferences.getString("ChittiChat_token","null"));
+                socket.emit("authorize",jsonObject);
+            }catch (JSONException je){
+                Log.e("Exception_Authorization",je.getMessage());
+            }
+        }
+    }
+    @Override
+    public void onBackPressed()
+    {
+        JSONObject joinRoomrequest = new JSONObject();
+        try {
+            joinRoomrequest.put("room_id", topicId);
+            joinRoomrequest.put("token",sharedPreferences.getString("ChittiChat_token","null"));
+            socket.emit("leaveRoom", joinRoomrequest);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        super.onBackPressed();
     }
 
     private void getArticle(String token,String topicId,String range){
@@ -116,9 +196,13 @@ public class TopicActivity extends AppCompatActivity {
             @Override
             public void onNext(List<Articles> articles) {
                 try {
-                    ArticleAdapter adapter = new ArticleAdapter(articles);
-                    recyclerView.setAdapter(adapter);
-                    recyclerView.scrollToPosition(0);
+                    articlesList = articles;
+                     articleAdapter = new ArticleAdapter(articlesList);
+                    for(Articles article:articlesList){
+                        getUsernameByUserId(article);
+                    }
+                     recyclerView.setAdapter(articleAdapter);
+                     recyclerView.scrollToPosition(0);
                 }catch (Exception e){
                     Log.e("ArticleEx:",e.getMessage());
                 }
@@ -127,6 +211,53 @@ public class TopicActivity extends AppCompatActivity {
             }
         });
 
+    }
+    private  void getArticleByArticleId(String articleId){
+        Observable<List<Articles>> getArticle = chittichatServices.getArticles(articleId);
+        getArticle.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<List<Articles>>() {
+            @Override
+            public void onCompleted() {
+
+            }
+
+            @Override
+            public void onError(Throwable e) {
+
+            }
+
+            @Override
+            public void onNext(List<Articles> articles) {
+                Log.d("newArticle",articles.get(0).get_id());
+                getUsernameByUserId(articles.get(0));
+                articlesList.add(0,articles.get(0));
+                articleAdapter.notifyDataSetChanged();
+
+            }
+        });
+    }
+
+    private void getUsernameByUserId(final Articles article){
+        Observable<Username> getUsername = chittichatServices.getUsername(article.getPublishedBy());
+        getUsername.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<Username>() {
+            @Override
+            public void onCompleted() {
+
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                Log.e("err",e.getMessage());
+
+            }
+
+            @Override
+            public void onNext(Username username) {
+                Log.d("username",username.getUsername());
+                article.setUsername(username.getUsername());
+                articleAdapter.notifyDataSetChanged();
+
+            }
+        });
     }
     public void onaddImage(View view){
         Intent intent = new Intent();
@@ -305,7 +436,7 @@ public class TopicActivity extends AppCompatActivity {
 //                        Toast.makeText(getApplicationContext(),"kuch to hua",Toast.LENGTH_SHORT).show();
                         ;
                         Log.i("aabccccdsfds",data.getString("articleId"));
-                        getArticle(token,topicId,"0_5");
+                        getArticleByArticleId(data.getString("articleId"));
                     }catch (Exception e) {
                         Log.e("Socket Exception",e.getMessage());
                     }
@@ -322,6 +453,7 @@ public class TopicActivity extends AppCompatActivity {
         if(!text.equals("")){
             Log.d("Article",text);
             Log.d("TopicId",topicId+"abbb");
+            Log.d("texts",text);
             ArticleInformation articleInformation = new ArticleInformation(token,topicId,text);
             postArticle(articleInformation);
 
@@ -333,12 +465,12 @@ public class TopicActivity extends AppCompatActivity {
 }
 
 class  ArticleInformation{
-    String token,topic_id,article_content;
+    String token,topic_id,marticle;
 
     public ArticleInformation(String token, String topicId, String article_content) {
         this.token = token;
         this.topic_id = topicId;
-        this.article_content = article_content;
+        this.marticle= article_content;
     }
 }
 class  MediaInformation{
@@ -351,7 +483,15 @@ class  MediaInformation{
     }
 }
 class Articles{
-    private String _id,createdOn,publishedBy,content_type,article_content;
+    private String _id,username,created_on,published_by,content_type,article_content;
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
 
     public String get_id() {
         return _id;
@@ -362,19 +502,19 @@ class Articles{
     }
 
     public String getCreatedOn() {
-        return createdOn;
+        return created_on;
     }
 
     public void setCreatedOn(String createdOn) {
-        this.createdOn = createdOn;
+        this.created_on = created_on;
     }
 
     public String getPublishedBy() {
-        return publishedBy;
+        return published_by;
     }
 
     public void setPublishedBy(String publishedBy) {
-        this.publishedBy = publishedBy;
+        this.published_by = published_by;
     }
 
     public String getContent_type() {
@@ -391,5 +531,17 @@ class Articles{
 
     public void setArticle_content(String article_content) {
         this.article_content = article_content;
+    }
+}
+
+class Username{
+    private String username;
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getUsername(){
+        return username;
     }
 }

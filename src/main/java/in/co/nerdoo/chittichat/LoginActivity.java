@@ -11,7 +11,10 @@
             import android.support.v7.widget.Toolbar;
             import android.util.Log;
             import android.view.View;
+            import android.view.Window;
+            import android.view.WindowManager;
             import android.widget.TextView;
+            import android.widget.Toast;
 
             import com.facebook.AccessToken;
             import com.facebook.CallbackManager;
@@ -64,22 +67,27 @@
                     super.onCreate(savedInstanceState);
                     FacebookSdk.sdkInitialize(getApplicationContext());
                     facebookCallbackManager = CallbackManager.Factory.create();
+                    requestWindowFeature(Window.FEATURE_NO_TITLE);
+                    getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                            WindowManager.LayoutParams.FLAG_FULLSCREEN);
                     setContentView(R.layout.activity_login);
-                    Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_login);
-                    toolbar.showOverflowMenu();
-                    setSupportActionBar(toolbar);
-                    getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+//                    Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_login);
+//                    toolbar.showOverflowMenu();
+//                    setSupportActionBar(toolbar);
+//                    getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
 
                     ((ChittichatApp) getApplication()).getMainAppComponent().inject(this);
 
-                    temp = (TextView) findViewById(R.id.textView);
+//                    temp = (TextView) findViewById(R.id.textView);
                     chittichatServices = retrofit.create(ChittichatServices.class);
                     editor = sharedPreferences.edit();
                     timer = new Timer();
 
                     if (isLogin()) {
                          Intent intent = new Intent(LoginActivity.this,FirstActivity.class);
+//                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+//                        finish();
                         startActivity(intent);
                     }
 
@@ -95,15 +103,17 @@
                                 @Override
                                 public void onCompleted(JSONObject object, final GraphResponse response) {
                                     try {
+//                                        editor.putBoolean("LoginWithfb",true);
                                         editor.putString("fb_token", loginResult.getAccessToken().toString());
                                         editor.putString("fb_userId", loginResult.getAccessToken().getUserId());
                                         editor.putString("first_name", object.getString("first_name"));
                                         editor.putString("last_name", object.getString("last_name"));
                                         editor.putString("profile_pic_url", object.getJSONObject("picture").getJSONObject("data").getString("url"));
-                                        editor.commit();
+                                        editor.apply();
                                         LoginInformation loginInformation = new LoginInformation(loginResult.getAccessToken().getUserId(), loginResult
                                                 .getAccessToken().toString());
                                         logincall(loginInformation);
+                                        Toast.makeText(getApplicationContext(),"login",Toast.LENGTH_SHORT).show();
                                     } catch (Exception e) {
                                         Log.e(TAG2, e.getMessage());
                                     }
@@ -122,12 +132,12 @@
 
                         @Override
                         public void onCancel() {
-                            temp.setText("login canceled");
+                            Toast.makeText(getApplicationContext(),"Login Canceled",Toast.LENGTH_SHORT).show();
                         }
 
                         @Override
                         public void onError(FacebookException error) {
-                            temp.setText("Login Failed");
+                            Toast.makeText(getApplicationContext(),"Login failed",Toast.LENGTH_SHORT).show();
                         }
                     });
                 }
@@ -215,7 +225,8 @@
 
                         @Override
                         public void onError(Throwable e) {
-                            Log.e(TAG1, e.getMessage());
+                            e.printStackTrace();
+                            Log.e(TAG1, e.getLocalizedMessage());
                         }
 
                         @Override
@@ -228,24 +239,28 @@
                                 signupWithFacebookCall(signupWithFacebookInformation);
 
                             } else if (responseMessage.getMessage().equals("something went wrong")) {
-                                timer.scheduleAtFixedRate(new TimerTask() {
-                                    @Override
-                                    public void run() {try {Handler handler = new Handler(Looper.getMainLooper());handler.post(new Runnable() {
-                                                                                                                                                                                   @Override
-                                                                                                                                                                                   public void run() {logincall(loginInformation);}
-                                                                                                                                                                               });} catch (Exception e) {Log.d("timer", e.getMessage());
-                                    }
-
-
-                                    }
-                                }, 0, 900000);
+                                Log.d("Err","something went wrong");
+//                                timer.scheduleAtFixedRate(new TimerTask() {
+//                                    @Override
+//                                    public void run() {try {Handler handler = new Handler(Looper.getMainLooper());handler.post(new Runnable() {
+//                                                                                                                                                                                   @Override
+//                                                                                                                                                                                   public void run() {logincall(loginInformation);}
+//                                                                                                                                                                               });} catch (Exception e) {Log.d("timer", e.getMessage());
+//                                    }
+//
+//
+//                                    }
+//                                }, 0, 900000);
                             } else {
                                 editor.putString("ChittiChat_token", responseMessage.getMessage());
                                 editor.apply();
                                 Log.d("token", sharedPreferences.getString("ChittiChat_token", null));
                                 Intent intent = new Intent(LoginActivity.this, FirstActivity.class);
+//                                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+//                                finish();
                                 startActivity(intent);
-                                finish();
+
+
 
                             }
                         }
@@ -268,24 +283,25 @@
                          @Override
                          public void onNext(ResponseMessage responseMessage) {
                           if (responseMessage.getMessage().equals("something went wrong")) {
-                           timer.scheduleAtFixedRate(new TimerTask() {
-                               @Override
-                               public void run() {
-                         try {
-                         Handler handler = new Handler(Looper.getMainLooper());
-                         handler.post(new Runnable() {
-                             @Override
-                             public void run() {
-                                 signupWithFacebookCall(signupWithFacebookInformation);
-                             }
-                         });
-                         } catch (Exception e) {
-                             Log.d("timer", e.getMessage());
-                         }
-
-
-                            }
-                           }, 0, 900000);
+                              Log.d("Signup err","Something went wrong");
+//                           timer.scheduleAtFixedRate(new TimerTask() {
+//                               @Override
+//                               public void run() {
+//                         try {
+//                         Handler handler = new Handler(Looper.getMainLooper());
+//                         handler.post(new Runnable() {
+//                             @Override
+//                             public void run() {
+//                                 signupWithFacebookCall(signupWithFacebookInformation);
+//                             }
+//                         });
+//                         } catch (Exception e) {
+//                             Log.d("timer", e.getMessage());
+//                         }
+//
+//
+//                            }
+//                           }, 0, 900000);
  } else {
 editor.putString("ChittiChat_token", responseMessage.getMessage());
 editor.apply();

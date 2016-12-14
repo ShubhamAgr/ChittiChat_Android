@@ -17,5 +17,6 @@ public interface MainAppComponent {
     void inject(ShowTopics showTopics);
     void inject(newTopicDialog newTopicDialog);
     void inject(CreateNewGroup createNewGroup);
+    void inject(showUsersOrGroupsActivity mshowUsersOrGroupsActivity);
     void inject(GroupAddRequestDialog groupAddRequestDialog);
 }

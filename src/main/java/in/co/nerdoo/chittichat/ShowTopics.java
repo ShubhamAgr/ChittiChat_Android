@@ -49,7 +49,7 @@ public class ShowTopics extends AppCompatActivity {
     SharedPreferences sharedPreferences;
     private String groupId;
     private static ChittichatServices chittichatServices;
-    private  static Subscription subscription_first,subscription_second,subscription_third;
+    private  static Subscription s1,s2,s3,s4;
     private static RecyclerView recyclerView;
     private RecyclerView.LayoutManager layoutManager;
     private static Boolean ShowEdittext;
@@ -190,11 +190,11 @@ public class ShowTopics extends AppCompatActivity {
 
     private static void callTopics(final String token,final String groupId){
         Observable<List<Topics>> getTopics = chittichatServices.getResponseOnAllTopics(token,groupId);
-        subscription_third = getTopics.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<List<Topics>>() {
+        s1 = getTopics.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<List<Topics>>() {
             @Override
             public void onCompleted() {
                 Log.d("Chittichat service:","request completed");
-                subscription_third.unsubscribe();
+                s1.unsubscribe();
             }
 
             @Override
@@ -214,11 +214,11 @@ public class ShowTopics extends AppCompatActivity {
 
     private static void callTopicsWithArticles(final String token,final String groupId) {
         Observable<List<TopicsWithArticle>> getTopicsWithArticle = chittichatServices.getResponseOnTopicsWithArticle(token,groupId);
-            subscription_first = getTopicsWithArticle.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new
+            s2 = getTopicsWithArticle.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new
                                                                                                                                           Observer<List<TopicsWithArticle>>() {
             @Override
             public void onCompleted() {
-                subscription_first.unsubscribe();
+                s2.unsubscribe();
                 Log.d("ChittiChat Server:","request completed");
             }
 
@@ -236,10 +236,10 @@ public class ShowTopics extends AppCompatActivity {
     public void unfollow(){
         Observable<ResponseMessage> unfollow = chittichatServices.getResponseOnUnFollowingGroup(sharedPreferences.getString("ChittiChat_token",
                 null),groupId);
-        unfollow.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<ResponseMessage>() {
+        s3 = unfollow.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<ResponseMessage>() {
             @Override
             public void onCompleted() {
-
+                s3.unsubscribe();
             }
 
             @Override

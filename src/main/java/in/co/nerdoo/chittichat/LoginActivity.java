@@ -59,7 +59,6 @@
                 private static Subscription subscription_first, subscription_second, subscription_third, subscription_fourth;
                 private static ChittichatServices chittichatServices;
                 private LoginButton loginWithFacebook;
-                private TextView temp;
                 private CallbackManager facebookCallbackManager;
 
                 @Override
@@ -71,10 +70,6 @@
                     getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                             WindowManager.LayoutParams.FLAG_FULLSCREEN);
                     setContentView(R.layout.activity_login);
-//                    Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_login);
-//                    toolbar.showOverflowMenu();
-//                    setSupportActionBar(toolbar);
-//                    getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
 
                     ((ChittichatApp) getApplication()).getMainAppComponent().inject(this);

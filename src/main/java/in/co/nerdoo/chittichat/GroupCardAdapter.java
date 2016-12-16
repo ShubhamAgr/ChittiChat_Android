@@ -90,7 +90,7 @@ public class GroupCardAdapter extends RecyclerView.Adapter<GroupCardAdapter.View
             if(pic_url.equals("default")){
                 Picasso.with(group_profile_context).load(R.drawable.group_icon_black).into(holder.group_profile_pic);
             }else{
-                Picasso.with(group_profile_context).load("http://ec2-35-160-113-29.us-west-2.compute.amazonaws.com/images/"+pic_url).into(holder.group_profile_pic);
+                Picasso.with(group_profile_context).load(ChittichatApp.getBaseUrl()+"/images/"+pic_url).into(holder.group_profile_pic);
             }
             holder.group_notification.setEllipsize(TextUtils.TruncateAt.END);
             holder.group_notification.setMaxLines(1);

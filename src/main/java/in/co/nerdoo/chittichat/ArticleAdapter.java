@@ -107,7 +107,7 @@ public class ArticleAdapter extends RecyclerView.Adapter<ArticleAdapter.ViewHold
                 break;
             case IMAGE:
                 holder.username_article2.setText(articles.get(position).get_id());
-                Picasso.with(holder.viewContext).load("http://ec2-35-160-113-29.us-west-2.compute.amazonaws.com/images/"+articles.get(position)
+                Picasso.with(holder.viewContext).load(ChittichatApp.getBaseUrl()+"/images/"+articles.get(position)
                         .getArticle_content()).into(holder.article_image);
                 break;
             case AUDIO:
@@ -121,7 +121,15 @@ public class ArticleAdapter extends RecyclerView.Adapter<ArticleAdapter.ViewHold
 
     @Override
     public int getItemCount() {
-        return articles.size();
+//        if(articles == null){
+//            return 0;
+//        }else if(articles.isEmpty()){
+//            return 0;
+//        }else {
+//            return articles.size();
+//        }
+        return  articles.size();
+
     }
 }
 

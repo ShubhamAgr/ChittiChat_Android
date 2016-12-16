@@ -24,6 +24,7 @@ import retrofit2.Retrofit;
 public class ChittichatApp extends Application {
     private  static ChittichatApp chittichatAppInstance;
     private static MainAppComponent mainAppComponent;
+    private static String baseurl;
     @Inject @Named("Document1")
     Document document_one;
     @Inject
@@ -37,10 +38,10 @@ public class ChittichatApp extends Application {
     @Override
     public void onCreate(){
      super.onCreate();
-
+        baseurl = "http://ec2-35-160-113-29.us-west-2.compute.amazonaws.com";
         chittichatAppInstance = this;
         mainAppComponent = DaggerMainAppComponent.builder().appModule(new AppModule(this)).storageModule(new StorageModule())
-                .netModule(new NetModule("http://ec2-35-160-113-29.us-west-2.compute.amazonaws.com")).build();
+                .netModule(new NetModule(baseurl)).build();
 
     }
 
@@ -63,6 +64,9 @@ public class ChittichatApp extends Application {
 
     public void setConnectivityListener(ConnectivityReciever.ConnectivityReceiverListener listener) {
         ConnectivityReciever.connectivityReceiverListener = listener;
+    }
+    public static String getBaseUrl(){
+        return baseurl;
     }
     public MainAppComponent getMainAppComponent() {
         return mainAppComponent;

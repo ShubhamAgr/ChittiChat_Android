@@ -55,6 +55,12 @@ public interface ChittichatServices {
     @POST("/newRequest")
     Observable<ResponseMessage> getResponseOnNewRequest(@Body NewRequestInformation newRequestInformation);
 
+    @GET("/requests/{groupid}")
+    Observable<List<groupRequestsNotification>> getGroupRequests(@Path("groupid") String groupid);
+
+//    @POST("/accept_request")
+//    Observable<ResponseMessage>  getResponseOnAcceptRequest(@Body ResponseRequestInformation responseRequestInformation);
+
     @GET("/followGroup/{token}/{groupid}")
     Observable<ResponseMessage> getResponseOnFollowingGroup(@Path("token") String token,@Path("groupid") String groupId);
 

@@ -41,9 +41,15 @@ public class GroupCardAdapter extends RecyclerView.Adapter<GroupCardAdapter.View
         public void onClick(final View v) {
             Intent intent = new Intent(viewContext,ShowTopics.class);
             intent.putExtra("groupId",mDataset.get(getPosition()).get_id());
-            if(mDataset.get(getPosition()).getRole().equals("administrator") || mDataset.get(getPosition()).getRole().equals("member")){
+            if(mDataset.get(getPosition()).getRole().equals("administrator")){
+                intent.putExtra("isadmin",true);
                 intent.putExtra("ShowEdittext",true);
-            }else{
+            }else if(mDataset.get(getPosition()).getRole().equals("member")){
+                intent.putExtra("isadmin",false);
+                intent.putExtra("ShowEdittext",true);
+            }
+            else{
+                intent.putExtra("isadmin",false);
                 intent.putExtra("ShowEdittext",false);
             }
             viewContext.startActivity(intent);

@@ -18,10 +18,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
             <LinearLayout
-                android:orientation="horizontal"
+                android:orientation="vertical"
                 android:gravity="center|left"
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
+                android:divider="@drawable/divider"
                 android:id="@+id/linearLayout_card1">
 
                 <!--<ImageView-->
@@ -38,6 +39,12 @@
                     android:text="Username"
                     android:textStyle="bold"
                     android:id="@+id/ArticleUsername_card1"/>
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:text="This will show full article"
+                    android:id="@+id/articleTextView"/>
             </LinearLayout>
 
             <LinearLayout
@@ -57,12 +64,7 @@
                     <!--android:id="@+id/ArticleBriefView"/>-->
 
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textAppearance="?android:attr/textAppearanceMedium"
-                    android:text="This will show full article"
-                    android:id="@+id/articleTextView"/>
+
 
 
             </LinearLayout>
@@ -71,7 +73,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceMedium"
-                android:text="Like"
+                android:text="Upvote"
                 android:paddingLeft="10dp"
                 android:id="@+id/like_card1"
                 android:textColor="@color/com_facebook_blue"

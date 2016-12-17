@@ -21,6 +21,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import org.json.JSONException;
@@ -53,6 +54,8 @@ public class ShowTopics extends AppCompatActivity {
     private static RecyclerView recyclerView;
     private RecyclerView.LayoutManager layoutManager;
     private static Boolean ShowEdittext;
+    private  static Boolean isadmin;
+    private ImageButton notification;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,9 +80,11 @@ public class ShowTopics extends AppCompatActivity {
 
         if(extras == null) {
             groupId = null;
+            isadmin = false;
         }else{
             groupId = extras.getString("groupId");
             ShowEdittext = extras.getBoolean("ShowEdittext");
+            isadmin = extras.getBoolean("isadmin");
             SharedPreferences.Editor  editor = sharedPreferences.edit();
             editor.putString("currentGroupId",groupId);
             editor.apply();
@@ -92,6 +97,11 @@ public class ShowTopics extends AppCompatActivity {
             socket.emit("joinRoom",joinRoom);
         }catch (JSONException e){
             Log.e("problem",e.getMessage());
+        }
+        notification = (ImageButton) findViewById(R.id.mynotificationbutton_showtopics);
+        notification.setVisibility(View.GONE);
+        if(isadmin){
+            notification.setVisibility(View.VISIBLE);
         }
         callTopics(sharedPreferences.getString("ChittiChat_token","null"),groupId);
 
@@ -188,6 +198,18 @@ public class ShowTopics extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+
+    //button clicks
+    public void onClickNotify(View view){
+        Log.d("Clicked","notify");
+        Intent intent = new Intent(getApplicationContext(),NotificationActivity.class);
+        intent.putExtra("groupId",groupId);
+        startActivity(intent);
+
+    }
+
+    //network call methods
+
     private static void callTopics(final String token,final String groupId){
         Observable<List<Topics>> getTopics = chittichatServices.getResponseOnAllTopics(token,groupId);
         s1 = getTopics.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<List<Topics>>() {
@@ -233,6 +255,7 @@ public class ShowTopics extends AppCompatActivity {
             }
         });
     }
+
     public void unfollow(){
         Observable<ResponseMessage> unfollow = chittichatServices.getResponseOnUnFollowingGroup(sharedPreferences.getString("ChittiChat_token",
                 null),groupId);
@@ -253,6 +276,7 @@ public class ShowTopics extends AppCompatActivity {
             }
         });
     }
+    //Decorative methods
     public class VerticalSpaceItemDecoration extends RecyclerView.ItemDecoration {
 
         private final int verticalSpaceHeight;
@@ -313,6 +337,7 @@ public class ShowTopics extends AppCompatActivity {
         }
     }
 }
+//Classes
 class Topics{
     private  String _id;
     private String topic_title;

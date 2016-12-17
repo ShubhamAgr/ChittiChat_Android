@@ -19,4 +19,6 @@ public interface MainAppComponent {
     void inject(CreateNewGroup createNewGroup);
     void inject(showUsersOrGroupsActivity mshowUsersOrGroupsActivity);
     void inject(GroupAddRequestDialog groupAddRequestDialog);
+    void inject(NotificationActivity notificationActivity);
+    void inject(NotificationAdapter notificationAdapter);
 }

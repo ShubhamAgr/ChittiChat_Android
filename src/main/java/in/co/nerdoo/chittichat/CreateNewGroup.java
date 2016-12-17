@@ -73,6 +73,7 @@ public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnI
     private EditText group_name, group_introduction,knockKnockQuestion;
     private static CallbackManager callbackManager;
     private static ShareDialog shareDialog;
+    private  static ResponseOnNewGroup myresponse;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -102,16 +103,19 @@ public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnI
             @Override
             public void onSuccess(Sharer.Result result) {
                 Toast.makeText(getApplicationContext(),"post shared",Toast.LENGTH_SHORT);
+                postGroupImage(myresponse.getGroupId());
             }
 
             @Override
             public void onCancel() {
                 Toast.makeText(getApplicationContext(),"post shared canceled",Toast.LENGTH_SHORT);
+                postGroupImage(myresponse.getGroupId());
             }
 
             @Override
             public void onError(FacebookException error) {
                 Toast.makeText(getApplicationContext(),"something went wrong",Toast.LENGTH_SHORT);
+                postGroupImage(myresponse.getGroupId());
             }
         });
     }
@@ -160,6 +164,7 @@ public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnI
                         finish();
                     }else{
                         Log.d("abcdefghij","3");
+                        myresponse = responseOnNewGroup;
                         Log.d("abcdefghij",responseOnNewGroup.getGroupId());
                         if (ShareDialog.canShow(ShareLinkContent.class)) {
                             ShareLinkContent groupcontent = new ShareLinkContent.Builder()
@@ -274,8 +279,6 @@ public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnI
                 if ("primary".equalsIgnoreCase(type)) {
                     return Environment.getExternalStorageDirectory() + "/" + split[1];
                 }
-
-                // TODO handle non-primary volumes
             }
             // DownloadsProvider
             else if (isDownloadsDocument(uri)) {

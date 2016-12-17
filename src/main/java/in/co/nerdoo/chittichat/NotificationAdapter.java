@@ -99,12 +99,5 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
 
 
 }
-//class ResponseRequestInformation{
-//    String token,requested_by;
-//
-//    public ResponseRequestInformation(String token, String requested_by) {
-//        this.token = token;
-//        this.requested_by = requested_by;
-//    }
-//}
+
 

@@ -42,6 +42,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
+import retrofit2.adapter.rxjava.HttpException;
 import retrofit2.http.Body;
 import rx.Observable;
 import rx.Observer;
@@ -196,15 +197,6 @@ public class TopicActivity extends AppCompatActivity {
     @Override
     public  void onDestroy(){
         super.onDestroy();
-        Log.d("OnDestroy","called");
-        s1.unsubscribe();
-        if(s2 != null){
-            s2.unsubscribe();
-        }
-        if(s3 != null){
-            s3.unsubscribe();
-        }
-
     }
     @Override
     public void onBackPressed()
@@ -220,7 +212,8 @@ public class TopicActivity extends AppCompatActivity {
         super.onBackPressed();
     }
     private void getInitialArticle(String token,String topicId,String range){
-        Observable<List<Articles>> getInitialArticles = chittichatServices.getResponseOnArticles(token,topicId,range);
+
+            Observable<List<Articles>> getInitialArticles = chittichatServices.getResponseOnArticles(token,topicId,range);
             s1 = getInitialArticles.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(articles->{
                 if(articles.isEmpty()){
                     isEmpty = true;
@@ -229,169 +222,58 @@ public class TopicActivity extends AppCompatActivity {
                 articleAdapter = new ArticleAdapter(articlesList);
                 recyclerView.setAdapter(articleAdapter);
                 recyclerView.scrollToPosition(0);
-            });//new
-//                                                                                                                                Observer<List<Articles>>() {
-//                @Override
-//                public void onCompleted() {
-//                    s1.unsubscribe();
-//                    initialItem=finalItem+1;
-//                    finalItem+=8;
-//                    TopicActivity.isLoading = false;
-//
-//
-//                }
-//
-//                @Override
-//                public void onError(Throwable e) {
-//                    Log.e("onInitialArticle",e.getMessage());
-//                }
-//
-//                @Override
-//                public void onNext(List<Articles> articles) {
-//                    if(articles.isEmpty()){
-//                        isEmpty = true;
-//                    }
-//                    articlesList = articles;
-////
-//
-////                    for(Articles article:articlesList){
-////                        TopicActivity.articlesList.add(article);
-////                        Log.d("p",article.getPublisher_name());
-////                    }
-//                    articleAdapter = new ArticleAdapter(articlesList);
-//                    recyclerView.setAdapter(articleAdapter);
-//                    recyclerView.scrollToPosition(0);
-//
-//                }
-//            });
+                s1.unsubscribe();
+                initialItem = finalItem+1;
+                finalItem +=10;
+                isLoading = false;
+            },throwable -> {
+                Log.e("error",throwable.getMessage());
+            });
+
+
         }
 
     private void getArticle(String token,String topicId,String range){
-        Observable<List<Articles>> getArticles = chittichatServices.getResponseOnArticles(token,topicId,range);
-        s2 = getArticles.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(articles->{
-            if(articles.isEmpty()){
-                isEmpty = true;
-            }
 
-            Parcelable recyclerViewState;
-            recyclerViewState = recyclerView.getLayoutManager().onSaveInstanceState();
-            try {
-                for(Articles article:articles){
-                    articlesList.add(article);
-
-//                        getUsernameByUserId(article);
+            Observable<List<Articles>> getArticles = chittichatServices.getResponseOnArticles(token,topicId,range);
+            s2 = getArticles.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(articles->{
+                if(articles.isEmpty()){
+                    isEmpty = true;
                 }
-                articleAdapter.notifyDataSetChanged();
-                recyclerView.getLayoutManager().onRestoreInstanceState(recyclerViewState);
-            }catch (Exception e){
-                Log.e("ArticleEx:",e.getMessage());
-            }
-        });
-//        new
-//                                                                                                                                       Observer<List<Articles>>() {
-//            @Override
-//            public void onCompleted() {
-//                s2.unsubscribe();
-//                TopicActivity.isLoading = false;
-//                initialItem=finalItem+1;
-//                finalItem+=10;
-//            }
-//
-//            @Override
-//            public void onError(Throwable e) {
-//                Log.e("onFetch article",e.getMessage());
-//            }
-//
-//            @Override
-//            public void onNext(List<Articles> articles) {
-//                if(articles.isEmpty()){
-//                    isEmpty = true;
-//                }
-//
-//                Parcelable recyclerViewState;
-//                recyclerViewState = recyclerView.getLayoutManager().onSaveInstanceState();
-//                try {
-//                    for(Articles article:articles){
-//                        articlesList.add(article);
-//
-////                        getUsernameByUserId(article);
-//                    }
-//                    articleAdapter.notifyDataSetChanged();
-//                    recyclerView.getLayoutManager().onRestoreInstanceState(recyclerViewState);
-//                }catch (Exception e){
-//                    Log.e("ArticleEx:",e.getMessage());
-//                }
-//
-//            }
-//        });
+
+                Parcelable recyclerViewState;
+                recyclerViewState = recyclerView.getLayoutManager().onSaveInstanceState();
+
+                    articlesList.addAll(articles);
+                    articleAdapter.notifyDataSetChanged();
+                    recyclerView.getLayoutManager().onRestoreInstanceState(recyclerViewState);
+                s2.unsubscribe();
+                initialItem = finalItem+1;
+                finalItem +=10;
+                isLoading = false;
+            },throwable -> {
+                Log.e("error",throwable.getMessage());
+            });
 
     }
     private  void getArticleByArticleId(String articleId){
-//        TopicActivity.isLoading = true;
-        Observable<List<Articles>> getArticle = chittichatServices.getArticles(articleId);
-       s3 =  getArticle.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(articles->{
-           if(articlesList != null){
-               Log.d("newArticle",articles.get(0).get_id());
+
+            Observable<List<Articles>> getArticle = chittichatServices.getArticles(articleId);
+            s3 =  getArticle.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(articles->{
+                if(articlesList != null){
+                    Log.d("newArticle",articles.get(0).get_id());
 //                getUsernameByUserId(articles.get(0));
-               articlesList.add(0,articles.get(0));
-           }else {
-               articlesList = articles;
-           }
+                    articlesList.add(0,articles.get(0));
+                }else {
+                    articlesList = articles;
+                }
 
-           articleAdapter.notifyDataSetChanged();
-       });
-//        new
-//                                                                                                                                      Observer<List<Articles>>() {
-//
-//            @Override
-//            public void onCompleted() {
-//                s3.unsubscribe();
-////                TopicActivity.isLoading = false;
-//            }
-//
-//            @Override
-//            public void onError(Throwable e) {
-//
-//            }
-//
-//            @Override
-//            public void onNext(List<Articles> articles) {
-//                if(articlesList != null){
-//                    Log.d("newArticle",articles.get(0).get_id());
-////                getUsernameByUserId(articles.get(0));
-//                    articlesList.add(0,articles.get(0));
-//                }else {
-//                    articlesList = articles;
-//                }
-//
-//                articleAdapter.notifyDataSetChanged();
-//
-//            }
-//        });
-    }
-
-    private void getUsernameByUserId(final Articles article){
-        Observable<Username> getUsername = chittichatServices.getUsername(article.getPublishedBy());
-       s4 =  getUsername.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<Username>() {
-            @Override
-            public void onCompleted() {
-                s4.unsubscribe();
-            }
-
-            @Override
-            public void onError(Throwable e) {
-                Log.e("err",e.getMessage());
-
-            }
-
-            @Override
-            public void onNext(Username username) {
-                Log.d("username",username.getUsername());
-                article.setUsername(username.getUsername());
                 articleAdapter.notifyDataSetChanged();
+                s3.unsubscribe();
+            },throwable -> {
+                Log.e("error",throwable.getMessage());
+            });
 
-            }
-        });
     }
     public void onaddImage(View view){
         Intent intent = new Intent();
@@ -446,32 +328,15 @@ public class TopicActivity extends AppCompatActivity {
 
     private void postArticle(ArticleInformation articleInformation ){
         Observable<ResponseMessage> getResponseOnArticleUpload = chittichatServices.getResponseOnPostArticle(articleInformation);
-        s5 = getResponseOnArticleUpload.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(new
-                                                                                                                                    Observer<ResponseMessage>() {
-            @Override
-            public void onCompleted() {
-                s5.unsubscribe();
-                Log.d("PostArticle","completed");
+        s5 = getResponseOnArticleUpload.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(responseMessage->{
+            Log.d("message",responseMessage.getMessage());
+            s5.unsubscribe();
+        },throwable -> {
+            if(throwable instanceof HttpException) {
+//                ((HttpException) throwable).code() == 400;
             }
-
-            @Override
-            public void onError(Throwable e) {
-
-            }
-
-            @Override
-            public void onNext(ResponseMessage responseMessage) {
-                    try {
-                        Log.d("Article sent",responseMessage.getMessage());
-                    }catch (Exception e){
-                        Log.e("Article sent Ex:",e.getMessage());
-                    }
-
-
-
-            }
+            Log.e("error",throwable.getMessage());
         });
-
     }
 
 
@@ -489,24 +354,12 @@ public class TopicActivity extends AppCompatActivity {
             RequestBody mtopicId = RequestBody.create(MediaType.parse("text/plain"), topicId);
 
             Observable<ResponseMessage> getResponseOnImageUpload = chittichatServices.getResponseOnPostImage(fbody,mytoken,mtopicId);
-          s6 = getResponseOnImageUpload.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(new
-                                                                                                                                       Observer<ResponseMessage>() {
-                 @Override
-                 public void onCompleted() {
-                     s6.unsubscribe();
-                     Log.d("PostImage","completed");
-                 }
+          s6 = getResponseOnImageUpload.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(responseMessage->{
+              Log.d("Image",responseMessage.getMessage());
+              s6.unsubscribe();
+          },throwable -> {
 
-                 @Override
-                 public void onError(Throwable e) {
-                    Log.e("PostImage",e.getMessage());
-                 }
-
-                 @Override
-                 public void onNext(ResponseMessage responseMessage) {
-                     Log.d("Image",responseMessage.getMessage());
-                 }
-             });
+          });
 
         }
     }
@@ -518,23 +371,7 @@ public class TopicActivity extends AppCompatActivity {
         String descriptionString = "This is video uploaded by user and user Id is......";
         RequestBody description = RequestBody.create(MediaType.parse("multipart/form-data"),descriptionString);
         Observable<ResponseMessage> getResponseOnVideoUpload = chittichatServices.getResponseOnPostVideo(body,description);
-        s7 = getResponseOnVideoUpload.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(new
-                                                                                                                                  Observer<ResponseMessage>() {
-            @Override
-            public void onCompleted() {
-                s7.unsubscribe();
-            }
-
-            @Override
-            public void onError(Throwable e) {
-
-            }
-
-            @Override
-            public void onNext(ResponseMessage responseMessage) {
-
-            }
-        });
+        s7 = getResponseOnVideoUpload.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(responseMessage->{s7.unsubscribe();});
 
     }
     private  void postAudio(Uri audioUri){

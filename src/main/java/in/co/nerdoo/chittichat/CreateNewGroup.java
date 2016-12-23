@@ -136,55 +136,43 @@ public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnI
         chittichatServices = retrofit.create(ChittichatServices.class);
 
         Observable<ResponseOnNewGroup> getResponseOnNewGroup = chittichatServices.getResponseOnNewGroup(newGroupInformation);
-        subscription_first = getResponseOnNewGroup.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<ResponseOnNewGroup>() {
-            @Override
-            public void onCompleted() {
-                Log.i("ChittiChat_Service","New Groups Request Done");
-                subscription_first.unsubscribe();
-            }
-
-            @Override
-            public void onError(Throwable e) {
-
-            }
-
-            @Override
-            public void onNext(ResponseOnNewGroup responseOnNewGroup) {
-
-                if(uploadImageUri.toString().equals("")){
-                    Log.d("abcdefghij","1");
-                    Intent intent = new Intent(CreateNewGroup.this,FirstActivity.class);
-                    startActivity(intent);
-                    finish();
-                }else{
-                    Log.d("abcaa",responseOnNewGroup.getMessage()+"ab");
-                    if(responseOnNewGroup.getMessage().equals("unsuccessful")){
-                        Log.d("abcdefghij","2");
+        subscription_first = getResponseOnNewGroup.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe
+                (responseOnNewGroup->{
+                    if(uploadImageUri.toString().equals("")){
+                        Log.d("abcdefghij","1");
                         Intent intent = new Intent(CreateNewGroup.this,FirstActivity.class);
                         startActivity(intent);
                         finish();
                     }else{
-                        Log.d("abcdefghij","3");
-                        myresponse = responseOnNewGroup;
-                        Log.d("abcdefghij",responseOnNewGroup.getGroupId());
-                        if (ShareDialog.canShow(ShareLinkContent.class)) {
-                            ShareLinkContent groupcontent = new ShareLinkContent.Builder()
-                                    .setContentTitle("Hello there, Follow my Group \""+group_name.getText().toString()+"\" in ChittiChat")
-                                    .setContentUrl(Uri.parse("https://play.google.com/store/apps/details?id=in.co.nerdoo.com.chittichat.chittichat"))
+                        Log.d("abcaa",responseOnNewGroup.getMessage()+"ab");
+                        if(responseOnNewGroup.getMessage().equals("unsuccessful")){
+                            Log.d("abcdefghij","2");
+                            Intent intent = new Intent(CreateNewGroup.this,FirstActivity.class);
+                            startActivity(intent);
+                            finish();
+                        }else{
+                            Log.d("abcdefghij","3");
+                            myresponse = responseOnNewGroup;
+                            Log.d("abcdefghij",responseOnNewGroup.getGroupId());
+                            if (ShareDialog.canShow(ShareLinkContent.class)) {
+                                ShareLinkContent groupcontent = new ShareLinkContent.Builder()
+                                        .setContentTitle("Hello there, Follow my Group \""+group_name.getText().toString()+"\" in ChittiChat")
+                                        .setContentUrl(Uri.parse("https://play.google.com/store/apps/details?id=in.co.nerdoo.com.chittichat.chittichat"))
 
-                                    .build();
-                                    //.setContentUrl(Uri.parse("http://developers.facebook.com/android"))//give the link of chittichat application...
+                                        .build();
+                                //.setContentUrl(Uri.parse("http://developers.facebook.com/android"))//give the link of chittichat application...
 
 
-                            shareDialog.show(groupcontent);
-                        }
+                                shareDialog.show(groupcontent);
+                            }
 //                        postGroupImage(responseOnNewGroup.getGroupId());
+                        }
                     }
-                }
+                    subscription_first.unsubscribe();
 
-
-            }
-        });
+                },throwable -> {
+                    Log.e("error",throwable.getMessage());
+                });
     }
     public void onClickcreateNewGroup(View view){
         if(!(group_name.getText().toString().equals("") && knockKnockQuestion.getText().toString().equals(""))){
@@ -411,36 +399,22 @@ public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnI
             RequestBody mgroupId = RequestBody.create(MediaType.parse("text/plain"), groupId);
 
             Observable<ResponseMessage> getResponseOnImageUpload = chittichatServices.getResponseOnGroupImage(fbody,mytoken,mgroupId);
-            getResponseOnImageUpload.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<ResponseMessage>() {
-                @Override
-                public void onCompleted() {
-                    Log.d("PostImage","completed");
+            getResponseOnImageUpload.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(responseMessage->{
+                Log.d("Image",responseMessage.getMessage());
+                if(responseMessage.getMessage().equals("successful")){
+                    Toast.makeText(getApplicationContext(),"Image Uploaded",Toast.LENGTH_SHORT).show();
                     if(file.exists())
                         file.delete();
+                    Intent intent = new Intent(CreateNewGroup.this,FirstActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    finish();
+                    startActivity(intent);
+
 
                 }
-
-                @Override
-                public void onError(Throwable e) {
-                    Log.e("PostImage",e.getMessage());
-                    Toast.makeText(getApplicationContext(),"Image Upload Error",Toast.LENGTH_SHORT).show();
-                }
-
-                @Override
-                public void onNext(ResponseMessage responseMessage) {
-                    Log.d("Image",responseMessage.getMessage());
-                    if(responseMessage.getMessage().equals("successful")){
-                        Toast.makeText(getApplicationContext(),"Image Uploaded",Toast.LENGTH_SHORT).show();
-                        Intent intent = new Intent(CreateNewGroup.this,FirstActivity.class);
-                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                        finish();
-                        startActivity(intent);
-
-
-                    }
-                }
+            },throwable -> {
+                Log.e("error",throwable.getMessage());
             });
-
         }
     }
     @TargetApi(Build.VERSION_CODES.M)

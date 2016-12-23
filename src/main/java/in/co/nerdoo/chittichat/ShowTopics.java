@@ -27,6 +27,7 @@ import android.widget.Toast;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -173,14 +174,6 @@ public class ShowTopics extends AppCompatActivity {
     @Override
     public void onDestroy(){
         super.onDestroy();
-        if(s1 != null){
-            s1.unsubscribe();
-        }
-        if(s3 != null){
-            s3.unsubscribe();
-        }
-//        s2.unsubscribe();
-
     }
 
     @Override
@@ -238,34 +231,20 @@ public class ShowTopics extends AppCompatActivity {
     //network call methods
 
     private static void callTopics(final String token,final String groupId){
-        Observable<List<Topics>> getTopics = chittichatServices.getResponseOnAllTopics(token,groupId);
-         getTopics.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(mytopics->{topicsList = mytopics;topicAdapter= new TopicAdapter(topicsList,ShowEdittext);recyclerView.setAdapter(topicAdapter);});
+
+            Observable<List<Topics>> getTopics = chittichatServices.getResponseOnAllTopics(token,groupId);
+            s1=  getTopics.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(mytopics->{
+                topicsList = mytopics;
+                topicAdapter= new TopicAdapter(topicsList,ShowEdittext);
+                recyclerView.setAdapter(topicAdapter);
+                s1.unsubscribe();
+            },throwable -> {
+               Log.e("error",throwable.getMessage());
+            });
 
 
-
-
-        //new Observer<List<Topics>>() {
-//            @Override
-//            public void onCompleted() {
-//                Log.d("Chittichat service:","request completed");
-//                s1.unsubscribe();
-//            }
-//
-//            @Override
-//            public void onError(Throwable e) {
-//
-//            }
-//
-//            @Override
-//            public void onNext(List<Topics> mytopics) {
-//                topicsList = mytopics;
-//                topicAdapter= new TopicAdapter(topicsList,ShowEdittext);
-//                recyclerView.setAdapter(topicAdapter);
-//
-//            }
-//        });
     }
-
+/*
     private static void callTopicsWithArticles(final String token,final String groupId) {
         Observable<List<TopicsWithArticle>> getTopicsWithArticle = chittichatServices.getResponseOnTopicsWithArticle(token,groupId);
             s2 = getTopicsWithArticle.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(new
@@ -288,25 +267,14 @@ public class ShowTopics extends AppCompatActivity {
             }
         });
     }
-
+*/
     public void unfollow(){
         Observable<ResponseMessage> unfollow = chittichatServices.getResponseOnUnFollowingGroup(sharedPreferences.getString("ChittiChat_token",
                 null),groupId);
-        s3 = unfollow.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<ResponseMessage>() {
-            @Override
-            public void onCompleted() {
-                s3.unsubscribe();
-            }
-
-            @Override
-            public void onError(Throwable e) {
-
-            }
-
-            @Override
-            public void onNext(ResponseMessage responseMessage) {
-
-            }
+        s3 = unfollow.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(responseMessage->{
+           s3.unsubscribe();
+        },throwable -> {
+            Log.e("error",throwable.getMessage());
         });
     }
 

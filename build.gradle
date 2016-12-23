@@ -1,6 +1,6 @@
 
 apply plugin: 'com.android.application'
-
+apply plugin: 'me.tatarka.retrolambda'
 apply plugin: 'com.neenbedankt.android-apt'
 android {
     compileSdkVersion 23
@@ -19,6 +19,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 }
 
 dependencies {
@@ -29,6 +33,7 @@ dependencies {
     }
     apt 'com.google.dagger:dagger-compiler:2.7'
     provided 'javax.annotation:jsr250-api:1.0'
+    retrolambdaConfig 'net.orfjackal.retrolambda:retrolambda:+'
     compile 'com.android.support:appcompat-v7:23.4.0'
     compile 'com.google.dagger:dagger:2.7'
     compile 'com.squareup.retrofit2:retrofit:2.1.0'

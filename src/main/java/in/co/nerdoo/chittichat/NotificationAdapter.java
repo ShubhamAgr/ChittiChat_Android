@@ -64,7 +64,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         switch (holder.getItemViewType()){
             case(GROUP_REQUEST_NOTIFICATION):
 
-                holder.requests_username.setText(groupRequests.get(position).getBy());
+                holder.requests_username.setText(groupRequests.get(position).getUsername());
                 holder.requests_answer.setText(groupRequests.get(position).getKnock_knock_answer());
                 holder.accept.setOnClickListener(new View.OnClickListener() {
                     @Override

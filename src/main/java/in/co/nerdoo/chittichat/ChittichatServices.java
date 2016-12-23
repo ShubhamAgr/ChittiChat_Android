@@ -93,6 +93,8 @@ public interface ChittichatServices {
     @GET("topicsWithArticle/{token}/{groupId}")
     Observable<List<TopicsWithArticle>> getResponseOnTopicsWithArticle(@Path("token") String token,@Path("groupId")String groupId); //pass token and groupId
     // Param
+    @GET("topicByTopicId/{token}/{topicid}")
+    Observable<List<Topics>> getReponseOnNewTopic(@Path("token") String token,@Path("topicid")String topicid);
 
     @GET("articles/{token}/{topicId}/{range}")
     Observable<List<Articles>> getResponseOnArticles(@Path("token") String token,@Path("topicId") String topicId,@Path("range") String range);

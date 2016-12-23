@@ -21,6 +21,7 @@ import android.transition.Slide;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
@@ -60,14 +61,18 @@ public class TopicActivity extends AppCompatActivity {
     private  static ChittichatServices chittichatServices;
     private EditText articleContent;
     private int PICK_IMAGE_REQUEST = 1;
-    private List<Articles> articlesList;
+    private static List<Articles> articlesList;
     private static RecyclerView recyclerView;
     private static Boolean ShowEdittext;
     private  static LinearLayout sendTextLayout;
     private  static ArticleAdapter articleAdapter;
     private static LinearLayoutManager manager;
-    private static boolean isLoading;
+    private static boolean isLoading,isEmpty,initEmit;
+    private static int initialItem;
+    private static int finalItem;
+    private static final int PAGE_SIZE = 8;
     Subscription s1,s2,s3,s4,s5,s6,s7,s8;
+    private ImageButton addPhoto;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -75,6 +80,7 @@ public class TopicActivity extends AppCompatActivity {
         articleContent = (EditText) findViewById(R.id.articleText);
         sendTextLayout = (LinearLayout)findViewById(R.id.linearLayout2) ;
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_articles);
+        addPhoto = (ImageButton) findViewById(R.id.myaddphotbutton);
         toolbar.setTitle("Chats");
         toolbar.showOverflowMenu();
         setSupportActionBar(toolbar);
@@ -90,8 +96,17 @@ public class TopicActivity extends AppCompatActivity {
         }
         if(!ShowEdittext){
             sendTextLayout.setVisibility(View.GONE);
+            addPhoto.setVisibility(View.GONE);
         }
-        socket.connect();
+        if(!initEmit){
+            socket.on("newarticle",onNewArticle);
+            initEmit = true;
+        }
+
+        if(!socket.connected()){
+            socket.connect();
+        }
+//
         JSONObject joinRoom = new JSONObject();
         try{
             joinRoom.put("token",sharedPreferences.getString("ChittiChat_token",null));
@@ -100,7 +115,7 @@ public class TopicActivity extends AppCompatActivity {
         }catch (JSONException e){
             Log.e("problem",e.getMessage());
         }
-        if(socket.connected()){
+
             try{
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.put("token",sharedPreferences.getString("ChittiChat_token","null"));
@@ -108,9 +123,9 @@ public class TopicActivity extends AppCompatActivity {
             }catch (JSONException je){
                 Log.e("Exception_Authorization",je.getMessage());
             }
-        }
-        socket.on("newarticle",onNewArticle);
-        isLoading =   false;
+
+
+
         chittichatServices = retrofit.create(ChittichatServices.class);
         recyclerView = (RecyclerView) findViewById(R.id.articles_recycler_view);
 //        recyclerView.setHasFixedSize(true);
@@ -118,10 +133,12 @@ public class TopicActivity extends AppCompatActivity {
         manager.setStackFromEnd(true);
         manager.setReverseLayout(true);
         recyclerView.setLayoutManager(manager);
-        //pagination
         recyclerView.addOnScrollListener(recyclerviewOnScrollListener);
-//        getArticle(token,topicId,"0_5",true);
-        getInitialArticle(token,topicId,"0_5");
+        isLoading =   true;
+        isEmpty = false;
+        initialItem = 0;
+        finalItem = 10;
+        getInitialArticle(token,topicId,initialItem+"_"+finalItem);
 
     }
 
@@ -129,7 +146,7 @@ public class TopicActivity extends AppCompatActivity {
     @Override
     public  void onPause(){
         super.onPause();
-        socket.connect();
+//        socket.connect();
         JSONObject joinRoomrequest = new JSONObject();
         try {
             joinRoomrequest.put("room_id", topicId);
@@ -156,7 +173,7 @@ public class TopicActivity extends AppCompatActivity {
     @Override
     public void onResume(){
         super.onResume();
-        socket.connect();
+//        socket.connect();
         JSONObject joinRoom = new JSONObject();
         try{
             joinRoom.put("token",sharedPreferences.getString("ChittiChat_token",null));
@@ -175,6 +192,20 @@ public class TopicActivity extends AppCompatActivity {
             }
         }
     }
+
+    @Override
+    public  void onDestroy(){
+        super.onDestroy();
+        Log.d("OnDestroy","called");
+        s1.unsubscribe();
+        if(s2 != null){
+            s2.unsubscribe();
+        }
+        if(s3 != null){
+            s3.unsubscribe();
+        }
+
+    }
     @Override
     public void onBackPressed()
     {
@@ -190,99 +221,158 @@ public class TopicActivity extends AppCompatActivity {
     }
     private void getInitialArticle(String token,String topicId,String range){
         Observable<List<Articles>> getInitialArticles = chittichatServices.getResponseOnArticles(token,topicId,range);
-            s1 = getInitialArticles.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new
-                                                                                                                                Observer<List<Articles>>() {
-                @Override
-                public void onCompleted() {
-                    s1.unsubscribe();
-
+            s1 = getInitialArticles.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(articles->{
+                if(articles.isEmpty()){
+                    isEmpty = true;
                 }
-
-                @Override
-                public void onError(Throwable e) {
-                    Log.e("onInitialArticle",e.getMessage());
-                }
-
-                @Override
-                public void onNext(List<Articles> articles) {
-
-                    articlesList = articles;
-
-
-                    for(Articles article:articlesList){
-                        getUsernameByUserId(article);
-                    }
-                    articleAdapter = new ArticleAdapter(articlesList);
-                    recyclerView.setAdapter(articleAdapter);
-                    recyclerView.scrollToPosition(0);
-                }
-            });
+                articlesList = articles;
+                articleAdapter = new ArticleAdapter(articlesList);
+                recyclerView.setAdapter(articleAdapter);
+                recyclerView.scrollToPosition(0);
+            });//new
+//                                                                                                                                Observer<List<Articles>>() {
+//                @Override
+//                public void onCompleted() {
+//                    s1.unsubscribe();
+//                    initialItem=finalItem+1;
+//                    finalItem+=8;
+//                    TopicActivity.isLoading = false;
+//
+//
+//                }
+//
+//                @Override
+//                public void onError(Throwable e) {
+//                    Log.e("onInitialArticle",e.getMessage());
+//                }
+//
+//                @Override
+//                public void onNext(List<Articles> articles) {
+//                    if(articles.isEmpty()){
+//                        isEmpty = true;
+//                    }
+//                    articlesList = articles;
+////
+//
+////                    for(Articles article:articlesList){
+////                        TopicActivity.articlesList.add(article);
+////                        Log.d("p",article.getPublisher_name());
+////                    }
+//                    articleAdapter = new ArticleAdapter(articlesList);
+//                    recyclerView.setAdapter(articleAdapter);
+//                    recyclerView.scrollToPosition(0);
+//
+//                }
+//            });
         }
 
     private void getArticle(String token,String topicId,String range){
         Observable<List<Articles>> getArticles = chittichatServices.getResponseOnArticles(token,topicId,range);
-        s2 = getArticles.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<List<Articles>>() {
-            @Override
-            public void onCompleted() {
-                s2.unsubscribe();
+        s2 = getArticles.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(articles->{
+            if(articles.isEmpty()){
+                isEmpty = true;
             }
 
-            @Override
-            public void onError(Throwable e) {
-                Log.e("onFetch article",e.getMessage());
-            }
+            Parcelable recyclerViewState;
+            recyclerViewState = recyclerView.getLayoutManager().onSaveInstanceState();
+            try {
+                for(Articles article:articles){
+                    articlesList.add(article);
 
-            @Override
-            public void onNext(List<Articles> articles) {
-                Parcelable recyclerViewState;
-                recyclerViewState = recyclerView.getLayoutManager().onSaveInstanceState();
-                try {
-                    for(Articles article:articles){
-                        articlesList.add(article);
-
-                        getUsernameByUserId(article);
-                    }
-                    articleAdapter.notifyDataSetChanged();
-                    recyclerView.getLayoutManager().onRestoreInstanceState(recyclerViewState);
-                }catch (Exception e){
-                    Log.e("ArticleEx:",e.getMessage());
+//                        getUsernameByUserId(article);
                 }
-                finally {
-                    isLoading = false;
-                }
-
-//                Log.d("Chittichat_Articles",articles.get(0).get_id());
+                articleAdapter.notifyDataSetChanged();
+                recyclerView.getLayoutManager().onRestoreInstanceState(recyclerViewState);
+            }catch (Exception e){
+                Log.e("ArticleEx:",e.getMessage());
             }
         });
+//        new
+//                                                                                                                                       Observer<List<Articles>>() {
+//            @Override
+//            public void onCompleted() {
+//                s2.unsubscribe();
+//                TopicActivity.isLoading = false;
+//                initialItem=finalItem+1;
+//                finalItem+=10;
+//            }
+//
+//            @Override
+//            public void onError(Throwable e) {
+//                Log.e("onFetch article",e.getMessage());
+//            }
+//
+//            @Override
+//            public void onNext(List<Articles> articles) {
+//                if(articles.isEmpty()){
+//                    isEmpty = true;
+//                }
+//
+//                Parcelable recyclerViewState;
+//                recyclerViewState = recyclerView.getLayoutManager().onSaveInstanceState();
+//                try {
+//                    for(Articles article:articles){
+//                        articlesList.add(article);
+//
+////                        getUsernameByUserId(article);
+//                    }
+//                    articleAdapter.notifyDataSetChanged();
+//                    recyclerView.getLayoutManager().onRestoreInstanceState(recyclerViewState);
+//                }catch (Exception e){
+//                    Log.e("ArticleEx:",e.getMessage());
+//                }
+//
+//            }
+//        });
 
     }
     private  void getArticleByArticleId(String articleId){
+//        TopicActivity.isLoading = true;
         Observable<List<Articles>> getArticle = chittichatServices.getArticles(articleId);
-       s3 =  getArticle.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<List<Articles>>() {
-            @Override
-            public void onCompleted() {
-                s3.unsubscribe();
-            }
+       s3 =  getArticle.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(articles->{
+           if(articlesList != null){
+               Log.d("newArticle",articles.get(0).get_id());
+//                getUsernameByUserId(articles.get(0));
+               articlesList.add(0,articles.get(0));
+           }else {
+               articlesList = articles;
+           }
 
-            @Override
-            public void onError(Throwable e) {
-
-            }
-
-            @Override
-            public void onNext(List<Articles> articles) {
-                Log.d("newArticle",articles.get(0).get_id());
-                getUsernameByUserId(articles.get(0));
-                articlesList.add(0,articles.get(0));
-                articleAdapter.notifyDataSetChanged();
-
-            }
-        });
+           articleAdapter.notifyDataSetChanged();
+       });
+//        new
+//                                                                                                                                      Observer<List<Articles>>() {
+//
+//            @Override
+//            public void onCompleted() {
+//                s3.unsubscribe();
+////                TopicActivity.isLoading = false;
+//            }
+//
+//            @Override
+//            public void onError(Throwable e) {
+//
+//            }
+//
+//            @Override
+//            public void onNext(List<Articles> articles) {
+//                if(articlesList != null){
+//                    Log.d("newArticle",articles.get(0).get_id());
+////                getUsernameByUserId(articles.get(0));
+//                    articlesList.add(0,articles.get(0));
+//                }else {
+//                    articlesList = articles;
+//                }
+//
+//                articleAdapter.notifyDataSetChanged();
+//
+//            }
+//        });
     }
 
     private void getUsernameByUserId(final Articles article){
         Observable<Username> getUsername = chittichatServices.getUsername(article.getPublishedBy());
-       s4 =  getUsername.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<Username>() {
+       s4 =  getUsername.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<Username>() {
             @Override
             public void onCompleted() {
                 s4.unsubscribe();
@@ -356,7 +446,7 @@ public class TopicActivity extends AppCompatActivity {
 
     private void postArticle(ArticleInformation articleInformation ){
         Observable<ResponseMessage> getResponseOnArticleUpload = chittichatServices.getResponseOnPostArticle(articleInformation);
-        s5 = getResponseOnArticleUpload.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new
+        s5 = getResponseOnArticleUpload.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(new
                                                                                                                                     Observer<ResponseMessage>() {
             @Override
             public void onCompleted() {
@@ -399,7 +489,7 @@ public class TopicActivity extends AppCompatActivity {
             RequestBody mtopicId = RequestBody.create(MediaType.parse("text/plain"), topicId);
 
             Observable<ResponseMessage> getResponseOnImageUpload = chittichatServices.getResponseOnPostImage(fbody,mytoken,mtopicId);
-          s6 = getResponseOnImageUpload.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new
+          s6 = getResponseOnImageUpload.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(new
                                                                                                                                        Observer<ResponseMessage>() {
                  @Override
                  public void onCompleted() {
@@ -428,7 +518,7 @@ public class TopicActivity extends AppCompatActivity {
         String descriptionString = "This is video uploaded by user and user Id is......";
         RequestBody description = RequestBody.create(MediaType.parse("multipart/form-data"),descriptionString);
         Observable<ResponseMessage> getResponseOnVideoUpload = chittichatServices.getResponseOnPostVideo(body,description);
-        s7 = getResponseOnVideoUpload.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new
+        s7 = getResponseOnVideoUpload.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(new
                                                                                                                                   Observer<ResponseMessage>() {
             @Override
             public void onCompleted() {
@@ -454,7 +544,7 @@ public class TopicActivity extends AppCompatActivity {
         String descriptionString = "This is audio uploaded by user and user Id is......";
         RequestBody description = RequestBody.create(MediaType.parse("multipart/form-data"),descriptionString);
         Observable<ResponseMessage> getResponseOnAudioUpload = chittichatServices.getResponseOnPostAudio(body,description);
-        s8 = getResponseOnAudioUpload.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new
+        s8 = getResponseOnAudioUpload.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(new
                                                                                                                                   Observer<ResponseMessage>() {
             @Override
             public void onCompleted() {
@@ -477,22 +567,26 @@ public class TopicActivity extends AppCompatActivity {
     private  Emitter.Listener onNewArticle  =  new Emitter.Listener() {
         @Override
         public void call(final Object... args) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    JSONObject data = (JSONObject) args[0];
-                    try {
+//            JSONObject data = (JSONObject) args[0];
+//            try {
+//                getArticleByArticleId(data.getString("articleId"));
+//                socket.emit("",new JSONObject("abc","abc"));
+//            }catch (Exception e) {
+//                Log.e("Socket Exception",e.getMessage());
+//            }
+//           runOnUiThread(new Runnable() {
+//               @Override
+//               public void run() {
+                   JSONObject data = (JSONObject) args[0];
+                   try {
+                       getArticleByArticleId(data.getString("articleId"));
+                   }catch (Exception e) {
+                       Log.e("Socket Exception",e.getMessage());
+                   }
+               }
+//           });
 
-//                        Toast.makeText(getApplicationContext(),"kuch to hua",Toast.LENGTH_SHORT).show();
-                        ;
-                        Log.i("aabccccdsfds",data.getString("articleId"));
-                        getArticleByArticleId(data.getString("articleId"));
-                    }catch (Exception e) {
-                        Log.e("Socket Exception",e.getMessage());
-                    }
-                }
-            });
-        }
+//        }
     };
 
 
@@ -504,7 +598,7 @@ public class TopicActivity extends AppCompatActivity {
             Log.d("Article",text);
             Log.d("TopicId",topicId+"abbb");
             Log.d("texts",text);
-            ArticleInformation articleInformation = new ArticleInformation(token,topicId,text);
+            ArticleInformation articleInformation = new ArticleInformation(token,topicId,sharedPreferences.getString("first_name","unknown"),text);
             postArticle(articleInformation);
 
 
@@ -526,29 +620,34 @@ public class TopicActivity extends AppCompatActivity {
             int firstVisibleItem = manager.findFirstVisibleItemPosition();
             int lastVisibleItem = manager.findLastVisibleItemPosition();
             Log.d("visible item",visibleItemCount+" "+totalItemCount+" "+firstVisibleItem+" "+lastVisibleItem);
-//            if(!isLoading){
-//                Log.d("condition",String.valueOf(totalItemCount-lastVisibleItem));
-//                isLoading = true;
-                if ((visibleItemCount + firstVisibleItem) >= totalItemCount && firstVisibleItem >= 0)// && totalItemCount >= PAGE_SIZE)
+            if(!isLoading && !isEmpty){
+                Log.d("condition",String.valueOf(totalItemCount-lastVisibleItem));
+                if ((visibleItemCount + firstVisibleItem) >= totalItemCount && firstVisibleItem >= 0)//
+               // &&
+               // totalItemCount >= PAGE_SIZE)
                 {
+                    TopicActivity.isLoading = true;
 
-                    getArticle(token,topicId,((lastVisibleItem+1)+"_"+(lastVisibleItem+5)));
+                    getArticle(token,topicId,initialItem+"_"+finalItem);//((lastVisibleItem+1)+"_"+(lastVisibleItem+PAGE_SIZE)));
                 }
 
                 Log.d("data",visibleItemCount+"\t"+totalItemCount+"\t"+firstVisibleItem+"\t"+lastVisibleItem+"\t");
+            }else{
+                Log.d("maybe","Loading");
             }
-//        }
+        }
     };
 
 }
 
 class  ArticleInformation{
-    String token,topic_id,marticle;
+    String token,topic_id,marticle,username;
 
-    public ArticleInformation(String token, String topicId, String article_content) {
+    public ArticleInformation(String token, String topicId, String username,String article_content) {
         this.token = token;
         this.topic_id = topicId;
         this.marticle= article_content;
+        this.username = username;
     }
 }
 class  MediaInformation{
@@ -561,7 +660,15 @@ class  MediaInformation{
     }
 }
 class Articles{
-    private String _id,username,created_on,published_by,content_type,article_content;
+    private String _id,username,created_on,published_by,publisher_name,content_type,article_content;
+
+    public String getPublisher_name() {
+        return publisher_name;
+    }
+
+    public void setPublisher_name(String publisher_name) {
+        this.publisher_name = publisher_name;
+    }
 
     public String getUsername() {
         return username;

@@ -9,19 +9,17 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
 
-        android:layout_margin="6dp"
+        android:layout_margin="2dp"
         android:elevation="2dp"
         android:padding="2dp"
         android:background="@drawable/my_rect"
         card_view:cardCornerRadius="4dp">
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+
             <LinearLayout
                 android:orientation="vertical"
                 android:gravity="center|left"
                 android:layout_width="match_parent"
-                android:layout_height="50dp"
+                android:layout_height="wrap_content"
                 android:divider="@drawable/divider"
                 android:id="@+id/linearLayout_card1">
 
@@ -42,44 +40,24 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_weight="1"
                     android:textAppearance="?android:attr/textAppearanceMedium"
-                    android:text="This will show full article"
+                    android:singleLine="false"
+                    android:text="Long multiline text Long multiline text Long multiline text Long multiline text Long multiline text"
                     android:id="@+id/articleTextView"/>
             </LinearLayout>
 
-            <LinearLayout
-                android:orientation="vertical"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/linearLayout_card1"
-                android:layout_alignParentLeft="true"
-                android:layout_alignParentStart="true"
-                android:id="@+id/linearLayout2_card1">
 
-                <!--<TextView-->
-                    <!--android:layout_width="match_parent"-->
-                    <!--android:layout_height="wrap_content"-->
-                    <!--android:textAppearance="?android:attr/textAppearanceMedium"-->
-                    <!--android:text="This will show brief of the article"-->
-                    <!--android:id="@+id/ArticleBriefView"/>-->
-
-
-
-
-
-            </LinearLayout>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:text="Upvote"
-                android:paddingLeft="10dp"
-                android:id="@+id/like_card1"
-                android:textColor="@color/com_facebook_blue"
-                android:layout_below="@+id/linearLayout2_card1"
-                android:layout_alignParentLeft="true"
-                android:layout_alignParentStart="true"/>
+            <!--<TextView-->
+                <!--android:layout_width="wrap_content"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:textAppearance="?android:attr/textAppearanceMedium"-->
+                <!--android:text="Upvote"-->
+                <!--android:paddingLeft="10dp"-->
+                <!--android:id="@+id/like_card1"-->
+                <!--android:textColor="@color/com_facebook_blue"-->
+                <!--android:layout_alignParentLeft="true"-->
+                <!--android:layout_alignParentStart="true"/>-->
 
             <!--<TextView-->
                 <!--android:layout_width="wrap_content"-->
@@ -93,6 +71,6 @@
                 <!--android:layout_below="@+id/linearLayout2_card1"-->
                 <!--android:layout_toRightOf="@+id/like_card1"-->
                 <!--android:layout_toEndOf="@+id/like_card1"/>-->
-        </RelativeLayout>
+
     </android.support.v7.widget.CardView>
 </LinearLayout>

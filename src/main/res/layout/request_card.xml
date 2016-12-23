@@ -25,6 +25,7 @@
                     android:layout_height="wrap_content"
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:text="Username"
+                    android:textStyle="bold"
                     android:id="@+id/requests_username"/>
 
                 <TextView

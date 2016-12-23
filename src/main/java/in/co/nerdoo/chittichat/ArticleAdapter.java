@@ -2,6 +2,7 @@ package in.co.nerdoo.chittichat;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -99,14 +100,15 @@ public class ArticleAdapter extends RecyclerView.Adapter<ArticleAdapter.ViewHold
     public void onBindViewHolder(final ViewHolder holder, int position) {
         switch (holder.getItemViewType()) {
             case TEXT:
-                if(articles.get(position).getUsername() != null){
-                    holder.username_article1.setText(articles.get(position).getUsername());
-                }
-
+//                if(articles.get(position).getUsername() != null){
+//                    Log.d("publishers name",articles.get(position).getPublisher_name());
+//
+//                }
+                holder.username_article1.setText(articles.get(position).getPublisher_name());
                 holder.article_content.setText(articles.get(position).getArticle_content());
                 break;
             case IMAGE:
-                holder.username_article2.setText(articles.get(position).get_id());
+                holder.username_article2.setText(articles.get(position).getUsername());
                 Picasso.with(holder.viewContext).load(ChittichatApp.getBaseUrl()+"/images/"+articles.get(position)
                         .getArticle_content()).into(holder.article_image);
                 break;

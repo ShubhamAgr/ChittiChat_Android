@@ -81,6 +81,8 @@
         </activity>
         <activity android:name=".NotificationActivity">
         </activity>
+        <activity android:name=".FindGroups">
+        </activity>
     </application>
 
 </manifest>

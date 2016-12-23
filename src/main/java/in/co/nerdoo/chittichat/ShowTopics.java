@@ -32,6 +32,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import io.socket.client.Socket;
+import io.socket.emitter.Emitter;
 import retrofit2.Retrofit;
 import retrofit2.http.Body;
 import rx.Observable;
@@ -53,9 +54,11 @@ public class ShowTopics extends AppCompatActivity {
     private  static Subscription s1,s2,s3,s4;
     private static RecyclerView recyclerView;
     private RecyclerView.LayoutManager layoutManager;
+    private  static TopicAdapter topicAdapter;
     private static Boolean ShowEdittext;
-    private  static Boolean isadmin;
+    private  static boolean isadmin,isInit;
     private ImageButton notification;
+    private static List<Topics> topicsList;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -90,6 +93,14 @@ public class ShowTopics extends AppCompatActivity {
             editor.apply();
 //            callTopics(sharedPreferences.getString("ChittiChat_token",null),groupId);
         }
+        if(!isInit){
+            socket.on("newtopic",onNewTopic);
+            isInit = true;
+        }
+
+        if(!socket.connected()){
+            socket.connect();
+        }
         JSONObject joinRoom = new JSONObject();
         try{
             joinRoom.put("token",sharedPreferences.getString("ChittiChat_token",null));
@@ -98,6 +109,7 @@ public class ShowTopics extends AppCompatActivity {
         }catch (JSONException e){
             Log.e("problem",e.getMessage());
         }
+
         notification = (ImageButton) findViewById(R.id.mynotificationbutton_showtopics);
         notification.setVisibility(View.GONE);
         if(isadmin){
@@ -110,7 +122,7 @@ public class ShowTopics extends AppCompatActivity {
     @Override
     public void onResume(){
         super.onResume();
-        socket.connect();
+//        socket.connect();
         JSONObject joinRoom = new JSONObject();
         try{
             joinRoom.put("token",sharedPreferences.getString("ChittiChat_token",null));
@@ -132,7 +144,7 @@ public class ShowTopics extends AppCompatActivity {
     @Override
     public void onPause(){
         super.onPause();
-        socket.connect();
+//        socket.connect();
         JSONObject joinRoomrequest = new JSONObject();
         try {
             joinRoomrequest.put("room_id", groupId);
@@ -156,6 +168,21 @@ public class ShowTopics extends AppCompatActivity {
         super.onStop();
 
     }
+
+
+    @Override
+    public void onDestroy(){
+        super.onDestroy();
+        if(s1 != null){
+            s1.unsubscribe();
+        }
+        if(s3 != null){
+            s3.unsubscribe();
+        }
+//        s2.unsubscribe();
+
+    }
+
     @Override
     public void onBackPressed()
     {
@@ -212,31 +239,36 @@ public class ShowTopics extends AppCompatActivity {
 
     private static void callTopics(final String token,final String groupId){
         Observable<List<Topics>> getTopics = chittichatServices.getResponseOnAllTopics(token,groupId);
-        s1 = getTopics.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<List<Topics>>() {
-            @Override
-            public void onCompleted() {
-                Log.d("Chittichat service:","request completed");
-                s1.unsubscribe();
-            }
+         getTopics.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(mytopics->{topicsList = mytopics;topicAdapter= new TopicAdapter(topicsList,ShowEdittext);recyclerView.setAdapter(topicAdapter);});
 
-            @Override
-            public void onError(Throwable e) {
 
-            }
 
-            @Override
-            public void onNext(List<Topics> mytopics) {
-                TopicAdapter adapter = new TopicAdapter(mytopics,ShowEdittext);
 
-                recyclerView.setAdapter(adapter);
-
-            }
-        });
+        //new Observer<List<Topics>>() {
+//            @Override
+//            public void onCompleted() {
+//                Log.d("Chittichat service:","request completed");
+//                s1.unsubscribe();
+//            }
+//
+//            @Override
+//            public void onError(Throwable e) {
+//
+//            }
+//
+//            @Override
+//            public void onNext(List<Topics> mytopics) {
+//                topicsList = mytopics;
+//                topicAdapter= new TopicAdapter(topicsList,ShowEdittext);
+//                recyclerView.setAdapter(topicAdapter);
+//
+//            }
+//        });
     }
 
     private static void callTopicsWithArticles(final String token,final String groupId) {
         Observable<List<TopicsWithArticle>> getTopicsWithArticle = chittichatServices.getResponseOnTopicsWithArticle(token,groupId);
-            s2 = getTopicsWithArticle.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new
+            s2 = getTopicsWithArticle.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(new
                                                                                                                                           Observer<List<TopicsWithArticle>>() {
             @Override
             public void onCompleted() {
@@ -251,6 +283,7 @@ public class ShowTopics extends AppCompatActivity {
 
             @Override
             public void onNext(List<TopicsWithArticle> articles) {
+
                     //send data to the recycler view of the
             }
         });
@@ -259,7 +292,7 @@ public class ShowTopics extends AppCompatActivity {
     public void unfollow(){
         Observable<ResponseMessage> unfollow = chittichatServices.getResponseOnUnFollowingGroup(sharedPreferences.getString("ChittiChat_token",
                 null),groupId);
-        s3 = unfollow.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<ResponseMessage>() {
+        s3 = unfollow.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<ResponseMessage>() {
             @Override
             public void onCompleted() {
                 s3.unsubscribe();
@@ -275,6 +308,47 @@ public class ShowTopics extends AppCompatActivity {
 
             }
         });
+    }
+
+    private Emitter.Listener onNewTopic = new Emitter.Listener() {
+        @Override
+        public void call(final Object... args) {
+//            runOnUiThread(new Runnable() {
+//                @Override
+//                public void run() {
+                    JSONObject data = (JSONObject) args[0];
+                    try{
+                        getTopicByTopicId(data.getString("topic_id"));
+                    }catch (JSONException e){
+
+                    }
+                }
+//            });
+//        }
+    };
+
+    private  void getTopicByTopicId(String topicId){
+            Observable<List<Topics>> getNewTopic = chittichatServices.getReponseOnNewTopic(sharedPreferences.getString("ChittiChat_token",null),
+                    topicId);
+        s4 = getNewTopic.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<List<Topics>>() {
+            @Override
+            public void onCompleted() {
+                s4.unsubscribe();
+            }
+
+            @Override
+            public void onError(Throwable e) {
+
+            }
+
+            @Override
+            public void onNext(List<Topics> topicses) {
+                    topicsList.add(topicses.get(0));
+                   topicAdapter.notifyDataSetChanged();
+
+            }
+        });
+
     }
     //Decorative methods
     public class VerticalSpaceItemDecoration extends RecyclerView.ItemDecoration {

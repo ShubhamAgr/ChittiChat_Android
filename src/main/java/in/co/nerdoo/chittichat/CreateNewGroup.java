@@ -31,6 +31,7 @@ import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
 import com.facebook.share.Sharer;
+import com.facebook.share.model.ShareContent;
 import com.facebook.share.model.ShareLinkContent;
 import com.facebook.share.widget.ShareDialog;
 
@@ -168,10 +169,8 @@ public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnI
                         Log.d("abcdefghij",responseOnNewGroup.getGroupId());
                         if (ShareDialog.canShow(ShareLinkContent.class)) {
                             ShareLinkContent groupcontent = new ShareLinkContent.Builder()
-                                    .setContentTitle("Hi Friends")
-
-                                    .setContentDescription("Follow my group at \"ChittiChat\" or answer my question to be member of a group")
-                                    .setContentUrl(Uri.parse("https://play.google.com/store/apps/details?id=com.imo.android.imoim"))
+                                    .setContentTitle("Hello there, Follow my Group \""+group_name.getText().toString()+"\" in ChittiChat")
+                                    .setContentUrl(Uri.parse("https://play.google.com/store/apps/details?id=in.co.nerdoo.com.chittichat.chittichat"))
 
                                     .build();
                                     //.setContentUrl(Uri.parse("http://developers.facebook.com/android"))//give the link of chittichat application...
@@ -395,41 +394,12 @@ public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnI
         return "com.google.android.apps.photos.content".equals(uri.getAuthority());
     }
 
-    @TargetApi(Build.VERSION_CODES.KITKAT)
-    private String getPathFromURI(Uri contentUri) {
-        //Will work only in kitkat......... and above...
-        String wholeID = DocumentsContract.getDocumentId(contentUri);
 
-        // Split at colon, use second item in the array
-        String id = wholeID.split(":")[1];
-
-        String[] column = { MediaStore.Images.Media.DATA };
-
-        // where id is equal to
-        String sel = MediaStore.Images.Media._ID + "=?";
-
-        Cursor cursor = getContentResolver().
-                query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                        column, sel, new String[]{ id }, null);
-
-        String filePath = "";
-
-        int columnIndex = cursor.getColumnIndex(column[0]);
-
-        if (cursor.moveToFirst()) {
-            filePath = cursor.getString(columnIndex);
-        }
-
-        cursor.close();
-        return filePath;
-    }
 
     private void postGroupImage(String groupId){
+        Toast.makeText(getApplicationContext(),"Image uploading",Toast.LENGTH_SHORT).show();
         Log.d("hi","hi"+groupId);
         Log.d("myuploadImage",uploadImageUri.toString());
-//        String mypath = getPathFromURI(uploadImageUri);
-//        File file = new File(uploadImageUri.getPath());
-//        Log.d("myfilePath",mypath);
         if(file == null){
             Log.d("imageUri",uploadImageUri.toString());
             Log.d("imageUri.path",uploadImageUri.getPath());
@@ -453,15 +423,19 @@ public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnI
                 @Override
                 public void onError(Throwable e) {
                     Log.e("PostImage",e.getMessage());
+                    Toast.makeText(getApplicationContext(),"Image Upload Error",Toast.LENGTH_SHORT).show();
                 }
 
                 @Override
                 public void onNext(ResponseMessage responseMessage) {
                     Log.d("Image",responseMessage.getMessage());
                     if(responseMessage.getMessage().equals("successful")){
+                        Toast.makeText(getApplicationContext(),"Image Uploaded",Toast.LENGTH_SHORT).show();
                         Intent intent = new Intent(CreateNewGroup.this,FirstActivity.class);
-                        startActivity(intent);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                         finish();
+                        startActivity(intent);
+
 
                     }
                 }

@@ -86,11 +86,37 @@ public class NotificationActivity extends AppCompatActivity {
             public void onNext(List<groupRequestsNotification> groupRequestsNotifications) {
                 Log.d("_id",groupRequestsNotifications.get(0).getBy());
                 mygroupRequestInfo = groupRequestsNotifications;
-             NotificationAdapter adapter = new NotificationAdapter(groupRequestsNotifications);
-                recyclerView.setAdapter(adapter);
+             notificationAdapter = new NotificationAdapter(groupRequestsNotifications);
+                recyclerView.setAdapter(notificationAdapter);
+                for(groupRequestsNotification notification:groupRequestsNotifications){
+                    getUsernameByUserId(notification);
+                }
             }
         });
 
+    }
+    private void getUsernameByUserId(final groupRequestsNotification notification){
+        Observable<Username> getUsername = chittichatServices.getUsername(notification.getBy());
+         getUsername.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<Username>() {
+            @Override
+            public void onCompleted() {
+
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                Log.e("err",e.getMessage());
+
+            }
+
+            @Override
+            public void onNext(Username username) {
+                Log.d("username",username.getUsername());
+                notification.setUsername(username.getUsername());
+                notificationAdapter.notifyDataSetChanged();
+
+            }
+        });
     }
     public static void onAccept(ResponseRequestInformation responseRequestInformation){
         Observable<ResponseMessage> accept = chittichatServices.getResponseOnAcceptRequest(responseRequestInformation);

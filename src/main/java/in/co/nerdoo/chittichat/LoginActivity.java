@@ -30,6 +30,7 @@ import com.facebook.login.widget.LoginButton;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.sql.Time;
 import java.util.Arrays;
 import java.util.Objects;
@@ -39,6 +40,7 @@ import java.util.TimerTask;
 import javax.inject.Inject;
 
 import retrofit2.Retrofit;
+import retrofit2.adapter.rxjava.HttpException;
 import rx.Observable;
 import rx.Observer;
 import rx.Subscription;
@@ -51,12 +53,12 @@ public class LoginActivity extends AppCompatActivity {
     @Inject
     Retrofit retrofit;
 
-    private static Intent intent;
+
     final private String TAG1 = "ChittChat_Server";
     final private String TAG2 = "Facebook_Server";
     private static Timer timer;
     private static SharedPreferences.Editor editor;
-    private static Subscription subscription_first, subscription_second, subscription_third, subscription_fourth;
+    private static Subscription subscription_first, subscription_second,subscription_fourth;
     private static ChittichatServices chittichatServices;
     private LoginButton loginWithFacebook;
     private CallbackManager facebookCallbackManager;
@@ -197,7 +199,17 @@ public class LoginActivity extends AppCompatActivity {
                         startActivity(intent);
                     }
                     subscription_first.unsubscribe();
-                    });
+                    },throwable -> {
+                    if(throwable instanceof HttpException) {
+//                ((HttpException) throwable).code() == 400;
+                        Log.e("error",((HttpException) throwable).response().errorBody().toString());
+
+                    }
+                    if (throwable instanceof IOException) {
+                        // A network or conversion error happened
+                    }
+                    subscription_first.unsubscribe();
+                });
 
     }
 
@@ -205,19 +217,33 @@ public class LoginActivity extends AppCompatActivity {
         final Observable<ResponseMessage> signupUsingFacebookId = chittichatServices.getResponseOnSignupWithFacebook(signupWithFacebookInformation);
         subscription_second = signupUsingFacebookId.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe
                 (responseMessage->{
+                    Log.d("signup message",responseMessage.getMessage());
                     if (responseMessage.getMessage().equals("something went wrong")) {
                         Log.d("Signup err","Something went wrong");
+                        subscription_second.unsubscribe();
 //
                     } else {
-                        subscription_second.unsubscribe();
                         editor.putString("ChittiChat_token", responseMessage.getMessage());
                         editor.apply();
                         Log.d("token", sharedPreferences.getString("ChittiChat_token", null));
                         Intent intent = new Intent(LoginActivity.this, FirstActivity.class);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        finish();
                         startActivity(intent);
+
                     }
                 },throwable -> {
+                    if(throwable instanceof HttpException) {
+//                ((HttpException) throwable).code() == 400;
+                        Log.e("error",((HttpException) throwable).response().errorBody().toString());
 
+                    }
+                    if (throwable instanceof IOException) {
+                        // A network or conversion error happened
+//                        Log.e("error",((IOException) throwable).toString());
+                    }
+
+                    subscription_second.unsubscribe();
                 });
     }
 

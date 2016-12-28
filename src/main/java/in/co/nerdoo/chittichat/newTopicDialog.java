@@ -11,9 +11,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
 
+import java.io.IOException;
+
 import javax.inject.Inject;
 
 import retrofit2.Retrofit;
+import retrofit2.adapter.rxjava.HttpException;
 import rx.Observable;
 import rx.Observer;
 import rx.Subscription;
@@ -52,10 +55,8 @@ public class newTopicDialog extends DialogFragment {
                     public void onClick(DialogInterface dialog, int which) {
                         heading = (EditText) promptView.findViewById(R.id.topic_heading_dialog);
                         details = (EditText) promptView.findViewById(R.id.topic_detail_dialog);
-                        Log.i("abcd",heading.getText().toString()+details.getText().toString());
                         NewTopicInformation newTopicInformation = new NewTopicInformation(sharedPreferences.getString("ChittiChat_token",""),
                                 sharedPreferences.getString("currentGroupId",""),heading.getText().toString(),details.getText().toString());
-                        Log.d("abc",sharedPreferences.getString("currentGroupId","adfas"));
                         createNewTopic(newTopicInformation);
                     }
                 });
@@ -65,22 +66,22 @@ public class newTopicDialog extends DialogFragment {
     }
     private static void createNewTopic(NewTopicInformation newTopicInformation) {
         Observable<ResponseMessage> getOnNewTopicResponse = chittichatServices.getResponseOnNewTopic(newTopicInformation);
-        subscription = getOnNewTopicResponse.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<ResponseMessage>() {
-            @Override
-            public void onCompleted() {
-                Log.d("Task","Completed");
-            }
-
-            @Override
-            public void onError(Throwable e) {
-
-            }
-
-            @Override
-            public void onNext(ResponseMessage responseMessage) {
+        subscription = getOnNewTopicResponse.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe
+                (responseMessage->{
                     Log.d("message",responseMessage.getMessage());
-            }
-        });
+                    subscription.unsubscribe();
+                },throwable -> {
+                    if(throwable instanceof HttpException) {
+//                ((HttpException) throwable).code() == 400;
+                        Log.e("error",((HttpException) throwable).response().errorBody().toString());
+
+                    }
+                    if (throwable instanceof IOException) {
+                        // A network or conversion error happened
+                    }
+                    subscription.unsubscribe();
+                });
+
     }
 
 }

@@ -11,24 +11,25 @@ import android.os.Build;
 import android.os.Parcelable;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
-import android.support.v4.content.CursorLoader;
+
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.transition.Slide;
+
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
-import android.widget.Toast;
+
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -38,12 +39,8 @@ import io.socket.emitter.Emitter;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava.HttpException;
-import retrofit2.http.Body;
 import rx.Observable;
 import rx.Observer;
 import rx.Subscription;
@@ -227,7 +224,16 @@ public class TopicActivity extends AppCompatActivity {
                 finalItem +=10;
                 isLoading = false;
             },throwable -> {
-                Log.e("error",throwable.getMessage());
+                if(throwable instanceof HttpException) {
+//                ((HttpException) throwable).code() == 400;
+                    Log.e("error",((HttpException) throwable).response().errorBody().toString());
+
+                }
+                if (throwable instanceof IOException) {
+                    // A network or conversion error happened
+                }
+
+                s1.unsubscribe();
             });
 
 
@@ -252,8 +258,18 @@ public class TopicActivity extends AppCompatActivity {
                 finalItem +=10;
                 isLoading = false;
             },throwable -> {
-                Log.e("error",throwable.getMessage());
+                if(throwable instanceof HttpException) {
+//                ((HttpException) throwable).code() == 400;
+                    Log.e("error",((HttpException) throwable).response().errorBody().toString());
+
+                }
+                if (throwable instanceof IOException) {
+                    // A network or conversion error happened
+                }
+
+                s2.unsubscribe();
             });
+
 
     }
     private  void getArticleByArticleId(String articleId){
@@ -271,7 +287,17 @@ public class TopicActivity extends AppCompatActivity {
                 articleAdapter.notifyDataSetChanged();
                 s3.unsubscribe();
             },throwable -> {
-                Log.e("error",throwable.getMessage());
+                if(throwable instanceof HttpException) {
+//                ((HttpException) throwable).code() == 400;
+                    Log.e("error",((HttpException) throwable).response().errorBody().toString());
+
+                }
+                if (throwable instanceof IOException) {
+                    // A network or conversion error happened
+                }
+
+                s3.unsubscribe();
+
             });
 
     }
@@ -334,6 +360,11 @@ public class TopicActivity extends AppCompatActivity {
         },throwable -> {
             if(throwable instanceof HttpException) {
 //                ((HttpException) throwable).code() == 400;
+                Log.e("error",((HttpException) throwable).response().errorBody().toString());
+
+            }
+            if (throwable instanceof IOException) {
+                // A network or conversion error happened
             }
             Log.e("error",throwable.getMessage());
         });

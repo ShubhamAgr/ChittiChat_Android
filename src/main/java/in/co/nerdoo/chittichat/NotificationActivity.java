@@ -11,11 +11,13 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import java.io.IOException;
 import java.util.List;
 
 import javax.inject.Inject;
 
 import retrofit2.Retrofit;
+import retrofit2.adapter.rxjava.HttpException;
 import rx.Observable;
 import rx.Observer;
 import rx.Subscription;
@@ -34,7 +36,7 @@ public class NotificationActivity extends AppCompatActivity {
     private  static NotificationAdapter notificationAdapter;
     private static LinearLayoutManager manager;
     private static String groupId;
-    private  static Subscription s1,s2,s3;
+    private  static Subscription s1,s2,s3,s4;
     private static String token;
     private static List<groupRequestsNotification> mygroupRequestInfo;
     private  static ChittichatServices chittichatServices;
@@ -59,101 +61,98 @@ public class NotificationActivity extends AppCompatActivity {
     public static void onAcceptRequest(int position){
         Log.d("onAcceptRequest","accepted\t"+position);
         ResponseRequestInformation responseRequestInformation = new ResponseRequestInformation(token,mygroupRequestInfo.get(position).getBy(),groupId);
-        onAccept(responseRequestInformation);
+        onAccept(responseRequestInformation,position);
+
 
     }
     public static void onDenyRequest(int position){
         Log.d("onDenyRequest","denied\t"+position);
         ResponseRequestInformation responseRequestInformation = new ResponseRequestInformation(token,mygroupRequestInfo.get(position).getBy(),groupId);
-        onDeny(responseRequestInformation);
+        onDeny(responseRequestInformation,position);
+
     }
 
 
     public void fetchPendingRequests(String groupid){
         Observable<List<groupRequestsNotification>> responseOngroupRequestNotification = chittichatServices.getGroupRequests(groupid);
-        s1 = responseOngroupRequestNotification.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<List<groupRequestsNotification>>() {
-            @Override
-            public void onCompleted() {
-                s1.unsubscribe();
-            }
+        s1 = responseOngroupRequestNotification.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe
+                (groupRequestsNotifications->{
+                    Log.d("_id",groupRequestsNotifications.get(0).getBy());
+                    mygroupRequestInfo = groupRequestsNotifications;
+                    notificationAdapter = new NotificationAdapter(groupRequestsNotifications);
+                    recyclerView.setAdapter(notificationAdapter);
+                    for(groupRequestsNotification notification:groupRequestsNotifications){
+                        getUsernameByUserId(notification);
+                    }
+                    s1.unsubscribe();
+                },throwable -> {
+                    if(throwable instanceof HttpException) {
+//                ((HttpException) throwable).code() == 400;
+                        Log.e("error",((HttpException) throwable).response().errorBody().toString());
 
-            @Override
-            public void onError(Throwable e) {
-                Log.d("notificationErr",e.getMessage());
-            }
-
-            @Override
-            public void onNext(List<groupRequestsNotification> groupRequestsNotifications) {
-                Log.d("_id",groupRequestsNotifications.get(0).getBy());
-                mygroupRequestInfo = groupRequestsNotifications;
-             notificationAdapter = new NotificationAdapter(groupRequestsNotifications);
-                recyclerView.setAdapter(notificationAdapter);
-                for(groupRequestsNotification notification:groupRequestsNotifications){
-                    getUsernameByUserId(notification);
-                }
-            }
-        });
-
+                    }
+                    if (throwable instanceof IOException) {
+                        // A network or conversion error happened
+                    }
+                    s1.unsubscribe();
+                });
     }
     private void getUsernameByUserId(final groupRequestsNotification notification){
         Observable<Username> getUsername = chittichatServices.getUsername(notification.getBy());
-         getUsername.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<Username>() {
-            @Override
-            public void onCompleted() {
+         s4=getUsername.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(username->{
+             Log.d("username",username.getUsername());
+             notification.setUsername(username.getUsername());
+             notificationAdapter.notifyDataSetChanged();
+            s4.unsubscribe();
+         },throwable -> {
+             if(throwable instanceof HttpException) {
+//                ((HttpException) throwable).code() == 400;
+                 Log.e("error",((HttpException) throwable).response().errorBody().toString());
 
-            }
+             }
+             if (throwable instanceof IOException) {
+                 // A network or conversion error happened
+             }
+             s4.unsubscribe();
+         });
 
-            @Override
-            public void onError(Throwable e) {
-                Log.e("err",e.getMessage());
-
-            }
-
-            @Override
-            public void onNext(Username username) {
-                Log.d("username",username.getUsername());
-                notification.setUsername(username.getUsername());
-                notificationAdapter.notifyDataSetChanged();
-
-            }
-        });
     }
-    public static void onAccept(ResponseRequestInformation responseRequestInformation){
+    public static void onAccept(ResponseRequestInformation responseRequestInformation,final int position){
         Observable<ResponseMessage> accept = chittichatServices.getResponseOnAcceptRequest(responseRequestInformation);
-        s2 = accept.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<ResponseMessage>() {
-            @Override
-            public void onCompleted() {
-                s2.unsubscribe();
-            }
+        s2 = accept.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(responseMessage->{
+            Log.d("response",responseMessage.getMessage());
+            mygroupRequestInfo.remove(position);
+            notificationAdapter.notifyDataSetChanged();
+            s2.unsubscribe();
+        },throwable -> {
+            if(throwable instanceof HttpException) {
+//                ((HttpException) throwable).code() == 400;
+                Log.e("error",((HttpException) throwable).response().errorBody().toString());
 
-            @Override
-            public void onError(Throwable e) {
-                Log.e("error",e.getMessage());
             }
-
-            @Override
-            public void onNext(ResponseMessage responseMessage) {
-                Log.d("response",responseMessage.getMessage());
+            if (throwable instanceof IOException) {
+                // A network or conversion error happened
             }
+            s2.unsubscribe();
         });
     }
-    public static void onDeny(ResponseRequestInformation responseRequestInformation){
+    public static void onDeny(ResponseRequestInformation responseRequestInformation,final  int position){
         Observable<ResponseMessage> deny = chittichatServices.getResponseOnDenyRequest(responseRequestInformation);
-        s3 = deny.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<ResponseMessage>() {
-            @Override
-            public void onCompleted() {
-                s3.unsubscribe();
-            }
+        s3 = deny.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(responseMessage->{
+            Log.d("response",responseMessage.getMessage());
+            mygroupRequestInfo.remove(position);
+            notificationAdapter.notifyDataSetChanged();
+            s3.unsubscribe();
+        },throwable -> {
+            if(throwable instanceof HttpException) {
+//                ((HttpException) throwable).code() == 400;
+                Log.e("error",((HttpException) throwable).response().errorBody().toString());
 
-            @Override
-            public void onError(Throwable e) {
-                Log.e("error",e.getMessage());
             }
-
-            @Override
-            public void onNext(ResponseMessage responseMessage) {
-                Log.d("response",responseMessage.getMessage());
+            if (throwable instanceof IOException) {
+                // A network or conversion error happened
             }
+            s3.unsubscribe();
         });
     }
 }

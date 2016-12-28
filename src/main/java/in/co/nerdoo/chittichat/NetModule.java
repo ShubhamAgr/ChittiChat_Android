@@ -8,6 +8,7 @@ import com.google.gson.GsonBuilder;
 
 
 import java.net.URISyntaxException;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
 
@@ -50,12 +51,14 @@ public class NetModule {
     @Provides @Singleton
     OkHttpClient providesHttpClient(Cache cache) {
         OkHttpClient client = new OkHttpClient();
+
 //        client.setCache(cache);
         return  client;
     }
 
     @Provides @Singleton
     Retrofit provideRetrofit(Gson gson,OkHttpClient okHttpClient) {
+
         Retrofit retrofit = new Retrofit.Builder().addCallAdapterFactory(RxJavaCallAdapterFactory.create()).addConverterFactory
                 (GsonConverterFactory
                 .create(gson)).baseUrl

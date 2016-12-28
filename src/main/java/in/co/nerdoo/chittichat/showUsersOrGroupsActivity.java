@@ -20,12 +20,14 @@ import android.widget.Toast;
 
 import com.facebook.login.LoginManager;
 
+import java.io.IOException;
 import java.util.List;
 
 import javax.inject.Inject;
 
 import in.co.nerdoo.chittichat.R;
 import retrofit2.Retrofit;
+import retrofit2.adapter.rxjava.HttpException;
 import rx.Observable;
 import rx.Observer;
 import rx.Subscription;
@@ -40,7 +42,7 @@ public class showUsersOrGroupsActivity extends AppCompatActivity {
     @Inject
     Retrofit retrofit;
     private  static ChittichatServices chittichatServices;
-    private  static Subscription subscription;
+    private  static Subscription subscription,s2;
     private static RecyclerView recyclerView;
     private RecyclerView.LayoutManager layoutManager;
     @Override
@@ -103,24 +105,20 @@ public class showUsersOrGroupsActivity extends AppCompatActivity {
     }
     private static void callTopics(final String token,final String groupId){
         Observable<List<Topics>> getTopics = chittichatServices.getResponseOnAllTopics(token,groupId);
-        subscription = getTopics.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<List<Topics>>() {
-            @Override
-            public void onCompleted() {
-                Log.d("Chittichat service:","request completed");
-                subscription.unsubscribe();
-            }
-
-            @Override
-            public void onError(Throwable e) {
-
-            }
-
-            @Override
-            public void onNext(List<Topics> mytopics) {
-                TopicAdapter adapter = new TopicAdapter(mytopics,false);
-                recyclerView.setAdapter(adapter);
+        subscription = getTopics.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(mytopics->{
+            TopicAdapter adapter = new TopicAdapter(mytopics,false);
+            recyclerView.setAdapter(adapter);
+            subscription.unsubscribe();
+        },throwable -> {
+            if(throwable instanceof HttpException) {
+//                ((HttpException) throwable).code() == 400;
+                Log.e("error",((HttpException) throwable).response().errorBody().toString());
 
             }
+            if (throwable instanceof IOException) {
+                // A network or conversion error happened
+            }
+            subscription.unsubscribe();
         });
     }
 
@@ -130,21 +128,18 @@ public class showUsersOrGroupsActivity extends AppCompatActivity {
     public void followGroups(){
         Observable<ResponseMessage> followRequest = chittichatServices.getResponseOnFollowingGroup(sharedPreferences.getString("ChittiChat_token",
                 null),groupId);
-        followRequest.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<ResponseMessage>() {
-            @Override
-            public void onCompleted() {
+        s2 = followRequest.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(responseMessage->{
+        s2.unsubscribe();
+        },throwable -> {
+            if(throwable instanceof HttpException) {
+//                ((HttpException) throwable).code() == 400;
+                Log.e("error",((HttpException) throwable).response().errorBody().toString());
 
             }
-
-            @Override
-            public void onError(Throwable e) {
-
+            if (throwable instanceof IOException) {
+                // A network or conversion error happened
             }
-
-            @Override
-            public void onNext(ResponseMessage responseMessage) {
-
-            }
+            s2.unsubscribe();
         });
     }
     public void onClickfab(View view){

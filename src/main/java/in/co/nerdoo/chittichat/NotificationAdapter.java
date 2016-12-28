@@ -70,6 +70,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
                     @Override
                     public void onClick(View v) {
                         NotificationActivity.onAcceptRequest(position);
+
                     }
                 });
                 holder.deny.setOnClickListener(new View.OnClickListener() {

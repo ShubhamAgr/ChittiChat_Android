@@ -48,6 +48,7 @@ import javax.inject.Inject;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import retrofit2.Retrofit;
+import retrofit2.adapter.rxjava.HttpException;
 import retrofit2.http.Body;
 import rx.Observable;
 import rx.Observer;
@@ -62,7 +63,7 @@ public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnI
     SharedPreferences sharedPreferences;
     @Inject
     Retrofit retrofit;
-    Subscription subscription_first;
+    Subscription subscription_first,s2,s3;
     private static ChittichatServices chittichatServices;
     Spinner spinner;
     private ImageButton selectGroupImage;
@@ -171,7 +172,15 @@ public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnI
                     subscription_first.unsubscribe();
 
                 },throwable -> {
-                    Log.e("error",throwable.getMessage());
+                    if(throwable instanceof HttpException) {
+//                ((HttpException) throwable).code() == 400;
+                        Log.e("error",((HttpException) throwable).response().errorBody().toString());
+
+                    }
+                    if (throwable instanceof IOException) {
+                        // A network or conversion error happened
+                    }
+                    subscription_first.unsubscribe();
                 });
     }
     public void onClickcreateNewGroup(View view){
@@ -299,16 +308,14 @@ public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnI
                 return getDataColumn(context, contentUri, selection, selectionArgs);
             }
         }
-        // MediaStore (and general)
+
         else if ("content".equalsIgnoreCase(uri.getScheme())) {
 
-            // Return the remote address
             if (isGooglePhotosUri(uri))
                 return uri.getLastPathSegment();
 
             return getDataColumn(context, uri, null, null);
         }
-        // File
         else if ("file".equalsIgnoreCase(uri.getScheme())) {
             return uri.getPath();
         }
@@ -316,16 +323,6 @@ public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnI
         return null;
     }
 
-    /**
-     * Get the value of the data column for this Uri. This is useful for
-     * MediaStore Uris, and other file-based ContentProviders.
-     *
-     * @param context The context.
-     * @param uri The Uri to query.
-     * @param selection (Optional) Filter used in the query.
-     * @param selectionArgs (Optional) Selection arguments used in the query.
-     * @return The value of the _data column, which is typically a file path.
-     */
     public static String getDataColumn(Context context, Uri uri, String selection,
                                        String[] selectionArgs) {
 
@@ -348,36 +345,17 @@ public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnI
         }
         return null;
     }
-
-
-    /**
-     * @param uri The Uri to check.
-     * @return Whether the Uri authority is ExternalStorageProvider.
-     */
     public static boolean isExternalStorageDocument(Uri uri) {
         return "com.android.externalstorage.documents".equals(uri.getAuthority());
     }
-
-    /**
-     * @param uri The Uri to check.
-     * @return Whether the Uri authority is DownloadsProvider.
-     */
     public static boolean isDownloadsDocument(Uri uri) {
         return "com.android.providers.downloads.documents".equals(uri.getAuthority());
     }
 
-    /**
-     * @param uri The Uri to check.
-     * @return Whether the Uri authority is MediaProvider.
-     */
     public static boolean isMediaDocument(Uri uri) {
         return "com.android.providers.media.documents".equals(uri.getAuthority());
     }
 
-    /**
-     * @param uri The Uri to check.
-     * @return Whether the Uri authority is Google Photos.
-     */
     public static boolean isGooglePhotosUri(Uri uri) {
         return "com.google.android.apps.photos.content".equals(uri.getAuthority());
     }
@@ -399,12 +377,13 @@ public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnI
             RequestBody mgroupId = RequestBody.create(MediaType.parse("text/plain"), groupId);
 
             Observable<ResponseMessage> getResponseOnImageUpload = chittichatServices.getResponseOnGroupImage(fbody,mytoken,mgroupId);
-            getResponseOnImageUpload.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(responseMessage->{
+            s2 = getResponseOnImageUpload.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(responseMessage->{
                 Log.d("Image",responseMessage.getMessage());
                 if(responseMessage.getMessage().equals("successful")){
                     Toast.makeText(getApplicationContext(),"Image Uploaded",Toast.LENGTH_SHORT).show();
                     if(file.exists())
                         file.delete();
+                    s2.unsubscribe();
                     Intent intent = new Intent(CreateNewGroup.this,FirstActivity.class);
                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                     finish();
@@ -413,7 +392,15 @@ public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnI
 
                 }
             },throwable -> {
-                Log.e("error",throwable.getMessage());
+                if(throwable instanceof HttpException) {
+//                ((HttpException) throwable).code() == 400;
+                    Log.e("error",((HttpException) throwable).response().errorBody().toString());
+
+                }
+                if (throwable instanceof IOException) {
+                    // A network or conversion error happened
+                }
+                s2.unsubscribe();
             });
         }
     }
@@ -422,20 +409,13 @@ public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnI
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
             if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
                     != PackageManager.PERMISSION_GRANTED) {
-
-                // Should we show an explanation?
                 if (shouldShowRequestPermissionRationale(
                         Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                    // Explain to the user why we need to read the contacts
                 }
 
                 requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
                         MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE);
 
-                // MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE is an
-                // app-defined int constant
-
-//            return;
             }
         }
 

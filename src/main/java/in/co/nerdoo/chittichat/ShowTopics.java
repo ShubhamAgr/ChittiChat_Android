@@ -35,6 +35,7 @@ import javax.inject.Inject;
 import io.socket.client.Socket;
 import io.socket.emitter.Emitter;
 import retrofit2.Retrofit;
+import retrofit2.adapter.rxjava.HttpException;
 import retrofit2.http.Body;
 import rx.Observable;
 import rx.Observer;
@@ -239,7 +240,15 @@ public class ShowTopics extends AppCompatActivity {
                 recyclerView.setAdapter(topicAdapter);
                 s1.unsubscribe();
             },throwable -> {
-               Log.e("error",throwable.getMessage());
+                if(throwable instanceof HttpException) {
+//                ((HttpException) throwable).code() == 400;
+                    Log.e("error",((HttpException) throwable).response().errorBody().toString());
+
+                }
+                if (throwable instanceof IOException) {
+                    // A network or conversion error happened
+                }
+                Log.e("error",throwable.getMessage());
             });
 
 
@@ -298,25 +307,11 @@ public class ShowTopics extends AppCompatActivity {
     private  void getTopicByTopicId(String topicId){
             Observable<List<Topics>> getNewTopic = chittichatServices.getReponseOnNewTopic(sharedPreferences.getString("ChittiChat_token",null),
                     topicId);
-        s4 = getNewTopic.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<List<Topics>>() {
-            @Override
-            public void onCompleted() {
-                s4.unsubscribe();
-            }
-
-            @Override
-            public void onError(Throwable e) {
-
-            }
-
-            @Override
-            public void onNext(List<Topics> topicses) {
-                    topicsList.add(topicses.get(0));
-                   topicAdapter.notifyDataSetChanged();
-
-            }
+        s4 = getNewTopic.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(topicses->{
+            topicsList.add(topicses.get(0));
+            topicAdapter.notifyDataSetChanged();
+            s4.unsubscribe();
         });
-
     }
     //Decorative methods
     public class VerticalSpaceItemDecoration extends RecyclerView.ItemDecoration {

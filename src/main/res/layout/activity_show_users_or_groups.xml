@@ -24,6 +24,17 @@
             app:contentScrim="?attr/colorPrimary"
             app:layout_scrollFlags="scroll|exitUntilCollapsed">
 
+            <ImageView
+                android:layout_gravity="center"
+                android:id="@+id/groupsImg"
+                android:layout_height="120dp"
+                android:layout_width="250dp"
+                android:fitsSystemWindows="true"
+                app:layout_collapseMode="parallax"
+                android:src="@drawable/profile_icon4"
+                android:scaleType="centerCrop"
+                />
+
             <android.support.v7.widget.Toolbar
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"

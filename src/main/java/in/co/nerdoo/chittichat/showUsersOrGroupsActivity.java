@@ -1,6 +1,7 @@
 package in.co.nerdoo.chittichat;
 
 import android.app.DialogFragment;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -14,11 +15,14 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.facebook.login.LoginManager;
+import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
 import java.util.List;
@@ -37,6 +41,7 @@ import rx.schedulers.Schedulers;
 public class showUsersOrGroupsActivity extends AppCompatActivity {
     private  String groupId,groupName,groupAbout,question;
     TextView knock_knock_Question;
+    ImageView groupImage;
     @Inject
     SharedPreferences sharedPreferences;
     @Inject
@@ -50,11 +55,14 @@ public class showUsersOrGroupsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_show_users_or_groups);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        groupImage = (ImageView) findViewById(R.id.groupsImg);
         toolbar.showOverflowMenu();
         toolbar.setTitle("Group");
         setSupportActionBar(toolbar);
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         ((ChittichatApp) getApplication()).getMainAppComponent().inject(this);
         chittichatServices = retrofit.create(ChittichatServices.class);
+
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         recyclerView = (RecyclerView) findViewById(R.id.searched_results_recycler_view);
         recyclerView.setHasFixedSize(true);
@@ -77,6 +85,7 @@ public class showUsersOrGroupsActivity extends AppCompatActivity {
             groupAbout = extras.getString("groupAbout");
             question = extras.getString("question");
         }
+        Picasso.with(getApplicationContext()).load(ChittichatApp.getBaseUrl()+"/images/"+groupId).fit().into(groupImage);
         SharedPreferences.Editor  editor = sharedPreferences.edit();
         editor.putString("group_question",question);
         editor.apply();

@@ -45,6 +45,7 @@ import java.util.Random;
 
 import javax.inject.Inject;
 
+import id.zelory.compressor.Compressor;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import retrofit2.Retrofit;
@@ -372,7 +373,8 @@ public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnI
             Log.d("file path:","is null");
         }else{
             Log.d("paths",uploadImageUri.getPath());
-            RequestBody fbody = RequestBody.create(MediaType.parse("image/*"), file);
+            File compressedImageFile = Compressor.getDefault(this).compressToFile(file);
+            RequestBody fbody = RequestBody.create(MediaType.parse("image/*"),compressedImageFile);
             RequestBody mytoken = RequestBody.create(MediaType.parse("text/plain"), sharedPreferences.getString("ChittiChat_token","false"));
             RequestBody mgroupId = RequestBody.create(MediaType.parse("text/plain"), groupId);
 

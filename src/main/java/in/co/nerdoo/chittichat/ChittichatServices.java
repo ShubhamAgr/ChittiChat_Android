@@ -110,7 +110,7 @@ public interface ChittichatServices {
     @Multipart
     @POST("image")
     Observable<ResponseMessage> getResponseOnPostImage(@Part("file\"; filename=\"pp.png\" ") RequestBody file, @Part("token") RequestBody token,
-                                                 @Part("topicId") RequestBody id);
+                                                 @Part("topicId") RequestBody id,@Part("username") RequestBody username);
 
 
     @Multipart

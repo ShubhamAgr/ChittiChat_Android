@@ -34,6 +34,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import id.zelory.compressor.Compressor;
 import io.socket.client.Socket;
 import io.socket.emitter.Emitter;
 import okhttp3.MediaType;
@@ -253,10 +254,10 @@ public class TopicActivity extends AppCompatActivity {
                     articlesList.addAll(articles);
                     articleAdapter.notifyDataSetChanged();
                     recyclerView.getLayoutManager().onRestoreInstanceState(recyclerViewState);
-                s2.unsubscribe();
                 initialItem = finalItem+1;
                 finalItem +=10;
                 isLoading = false;
+                s2.unsubscribe();
             },throwable -> {
                 if(throwable instanceof HttpException) {
 //                ((HttpException) throwable).code() == 400;
@@ -380,11 +381,15 @@ public class TopicActivity extends AppCompatActivity {
         }else{
             Log.d("file path",path);
             File file = new File(path);
-            RequestBody fbody = RequestBody.create(MediaType.parse("image/*"), file);
+
+            File CompressedImageFile = Compressor.getDefault(this).compressToFile(file);
+
+            RequestBody fbody = RequestBody.create(MediaType.parse("image/*"), CompressedImageFile);
             RequestBody mytoken = RequestBody.create(MediaType.parse("text/plain"), token);
             RequestBody mtopicId = RequestBody.create(MediaType.parse("text/plain"), topicId);
+            RequestBody musername = RequestBody.create(MediaType.parse("text/plain"),sharedPreferences.getString("first_name","null"));
 
-            Observable<ResponseMessage> getResponseOnImageUpload = chittichatServices.getResponseOnPostImage(fbody,mytoken,mtopicId);
+            Observable<ResponseMessage> getResponseOnImageUpload = chittichatServices.getResponseOnPostImage(fbody,mytoken,mtopicId,musername);
           s6 = getResponseOnImageUpload.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(responseMessage->{
               Log.d("Image",responseMessage.getMessage());
               s6.unsubscribe();
@@ -498,8 +503,6 @@ public class TopicActivity extends AppCompatActivity {
 
                     getArticle(token,topicId,initialItem+"_"+finalItem);//((lastVisibleItem+1)+"_"+(lastVisibleItem+PAGE_SIZE)));
                 }
-
-                Log.d("data",visibleItemCount+"\t"+totalItemCount+"\t"+firstVisibleItem+"\t"+lastVisibleItem+"\t");
             }else{
                 Log.d("maybe","Loading");
             }

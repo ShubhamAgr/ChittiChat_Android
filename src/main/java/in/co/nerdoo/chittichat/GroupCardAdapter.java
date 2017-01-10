@@ -62,9 +62,8 @@ public class GroupCardAdapter extends RecyclerView.Adapter<GroupCardAdapter.View
     }
 
 
-    public GroupCardAdapter(Context mycontext,Document group_document,List<GroupsList> groupsLists)
+    public GroupCardAdapter(Context mycontext,List<GroupsList> groupsLists)
     {
-        this.group_document = group_document;
         this.myContext = mycontext;
         mDataset = groupsLists;
     }
@@ -86,12 +85,12 @@ public class GroupCardAdapter extends RecyclerView.Adapter<GroupCardAdapter.View
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
         Context group_profile_context = holder.group_profile_pic.getContext();
-        Map<String,Object> properties = group_document.getProperties();
+//        Map<String,Object> properties = group_document.getProperties();
         JSONObject jsonObject = null;
         try{
 
             String groupId = mDataset.get(position).get_id();
-            String pic_url=(String)properties.get(groupId+"pic_url");
+            String pic_url= mDataset.get(position).get_id();//(String)properties.get(groupId+"pic_url");
             Log.d("picture url",pic_url);
             if(pic_url.equals("default")){
                 Picasso.with(group_profile_context).load(R.drawable.group_icon_black).into(holder.group_profile_pic);
@@ -102,8 +101,12 @@ public class GroupCardAdapter extends RecyclerView.Adapter<GroupCardAdapter.View
             holder.group_notification.setMaxLines(1);
             holder.group_title.setEllipsize(TextUtils.TruncateAt.END);
             holder.group_title.setMaxLines(1);
-            holder.group_notification.setText(((String)properties.get(groupId+"motivation")));//properties.get(mDataset.get(position).get_id())));
-            holder.group_title.setText((String)properties.get(groupId+"name"));
+            holder.group_notification.setText(mDataset.get(position).getGroup_about());//((String)properties.get(groupId+"motivation")));//properties.get(mDataset
+            // .get
+            // (position)
+            // .get_id()
+            // )));
+            holder.group_title.setText(mDataset.get(position).getGroup_name());//(String)properties.get(groupId+"name"));
 
         }catch (Exception e){
             Log.e("GroupCardAdapterEx:",e.getMessage());

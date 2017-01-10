@@ -108,7 +108,7 @@ public class ArticleAdapter extends RecyclerView.Adapter<ArticleAdapter.ViewHold
                 holder.article_content.setText(articles.get(position).getArticle_content());
                 break;
             case IMAGE:
-                holder.username_article2.setText(articles.get(position).getUsername());
+                holder.username_article2.setText(articles.get(position).getPublisher_name());
                 Picasso.with(holder.viewContext).load(ChittichatApp.getBaseUrl()+"/images/"+articles.get(position)
                         .getArticle_content()).into(holder.article_image);
                 break;

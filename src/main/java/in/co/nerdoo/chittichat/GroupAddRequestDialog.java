@@ -2,6 +2,7 @@ package in.co.nerdoo.chittichat;
 
 import android.app.Dialog;
 import android.app.DialogFragment;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -9,6 +10,7 @@ import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -37,10 +39,8 @@ public class GroupAddRequestDialog extends DialogFragment {
         ((ChittichatApp) getActivity().getApplication()).getMainAppComponent().inject(this);AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         chittichatServices = retrofit.create(ChittichatServices.class);
 
-
         LayoutInflater inflater = getActivity().getLayoutInflater();
         final View promptView = inflater.inflate(R.layout.group_request_dialog_request,null);
-
         builder.setMessage(sharedPreferences.getString("group_question","----"));
         builder.setView(promptView)
                 .setPositiveButton("Join", new DialogInterface.OnClickListener() {
@@ -54,6 +54,7 @@ public class GroupAddRequestDialog extends DialogFragment {
                 });
 
         return builder.create();
+
 
     }
     public void postNewRequest(NewRequestInformation newRequestInformation){

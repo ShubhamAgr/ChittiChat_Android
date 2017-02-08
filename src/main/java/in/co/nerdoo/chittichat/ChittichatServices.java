@@ -39,6 +39,8 @@ public interface ChittichatServices {
     @POST("signupWithFacebook")
     Observable<ResponseMessage> getResponseOnSignupWithFacebook(@Body SignupWithFacebookInformation signupWithFacebookInformation);
 
+    @GET("getCurrentVersionCode/{version_code}")
+    Observable<PreLogin> getVersionCode(@Path("version_code") String version_code);
 
     //Groups Related Urls
 
@@ -51,6 +53,8 @@ public interface ChittichatServices {
     @GET("/groupDetail/{token}/{groupId}")
     Observable<GroupDetail> getResponseOnGroupDetail(@Path("token")String token,@Path("groupId") String groupId);
 
+    @GET("/groupNotificationCount/{groupId}")
+    Observable<ResponseMessage> getResponseOnNotficationCount(@Path("groupId")String groupId);
 
     @POST("/newRequest")
     Observable<ResponseMessage> getResponseOnNewRequest(@Body NewRequestInformation newRequestInformation);

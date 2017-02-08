@@ -22,6 +22,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import org.json.JSONException;
@@ -58,28 +60,32 @@ public class ShowTopics extends AppCompatActivity {
     private RecyclerView.LayoutManager layoutManager;
     private  static TopicAdapter topicAdapter;
     private static Boolean ShowEdittext;
-    private  static boolean isadmin,isInit;
+    public  static boolean isadmin,isInit;
     private ImageButton notification;
+    private static TextView notificationCount;
     private static List<Topics> topicsList;
+    private static ProgressBar progressBar;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_show_topics);
+        notification = (ImageButton) findViewById(R.id.mynotificationbutton_showtopics);
+        notificationCount = (TextView) findViewById(R.id.notificationCount);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_show_topics);
         toolbar.setTitle("Topics");
         toolbar.showOverflowMenu();
         setSupportActionBar(toolbar);
         ((ChittichatApp) getApplication()).getMainAppComponent().inject(this);
-
-
+        progressBar=(ProgressBar)findViewById(R.id.progressBar_showTopics);
+        progressBar.setVisibility(View.VISIBLE);
         chittichatServices  = retrofit.create(ChittichatServices.class);
         recyclerView = (RecyclerView) findViewById(R.id.topics_recycler_view);
         recyclerView.setHasFixedSize(true);
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
-        recyclerView.addItemDecoration(new VerticalSpaceItemDecoration(5));
-        recyclerView.addItemDecoration(
-                new DividerItemDecoration(getApplicationContext(), R.drawable.divider));
+//        recyclerView.addItemDecoration(new VerticalSpaceItemDecoration(5));
+//        recyclerView.addItemDecoration(
+//                new DividerItemDecoration(getApplicationContext(), R.drawable.divider));
 
         Bundle extras = getIntent().getExtras();
 
@@ -111,11 +117,11 @@ public class ShowTopics extends AppCompatActivity {
         }catch (JSONException e){
             Log.e("problem",e.getMessage());
         }
-
-        notification = (ImageButton) findViewById(R.id.mynotificationbutton_showtopics);
         notification.setVisibility(View.GONE);
+        notificationCount.setVisibility(View.GONE);
         if(isadmin){
             notification.setVisibility(View.VISIBLE);
+            notificationCount.setVisibility(View.VISIBLE);
         }
         callTopics(sharedPreferences.getString("ChittiChat_token","null"),groupId);
 
@@ -238,6 +244,7 @@ public class ShowTopics extends AppCompatActivity {
                 topicsList = mytopics;
                 topicAdapter= new TopicAdapter(topicsList,ShowEdittext);
                 recyclerView.setAdapter(topicAdapter);
+                progressBar.setVisibility(View.GONE);
                 s1.unsubscribe();
             },throwable -> {
                 if(throwable instanceof HttpException) {
@@ -248,10 +255,28 @@ public class ShowTopics extends AppCompatActivity {
                 if (throwable instanceof IOException) {
                     // A network or conversion error happened
                 }
+                progressBar.setVisibility(View.GONE);
                 Log.e("error",throwable.getMessage());
             });
 
 
+    }
+
+    private static void callNotificationCount(String groupId){
+        Observable<ResponseMessage> getCount = chittichatServices.getResponseOnNotficationCount(groupId);
+        s2 = getCount.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(count->{
+            notificationCount.setText(count.getMessage());
+        },throwable -> {
+            if(throwable instanceof HttpException) {
+//                ((HttpException) throwable).code() == 400;
+                Log.e("error",((HttpException) throwable).response().errorBody().toString());
+
+            }
+            if (throwable instanceof IOException) {
+                // A network or conversion error happened
+            }
+            Log.e("error",throwable.getMessage());
+        });
     }
 /*
     private static void callTopicsWithArticles(final String token,final String groupId) {

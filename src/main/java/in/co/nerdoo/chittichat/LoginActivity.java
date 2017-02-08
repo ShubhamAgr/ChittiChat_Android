@@ -1,19 +1,17 @@
 package in.co.nerdoo.chittichat;
 
-import android.app.Activity;
+
 import android.app.DialogFragment;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.Handler;
-import android.os.Looper;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.facebook.AccessToken;
@@ -26,34 +24,26 @@ import com.facebook.GraphResponse;
 import com.facebook.HttpMethod;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
-
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.sql.Time;
 import java.util.Arrays;
-import java.util.Objects;
 import java.util.Timer;
-import java.util.TimerTask;
 
 import javax.inject.Inject;
 
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava.HttpException;
 import rx.Observable;
-import rx.Observer;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
-public class LoginActivity extends AppCompatActivity {
+public class LoginActivity extends AppCompatActivity implements ConnectivityReciever.ConnectivityReceiverListener {
     @Inject
     SharedPreferences sharedPreferences;
     @Inject
     Retrofit retrofit;
-
-
     final private String TAG1 = "ChittChat_Server";
     final private String TAG2 = "Facebook_Server";
     private static Timer timer;
@@ -72,16 +62,23 @@ public class LoginActivity extends AppCompatActivity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_login);
-
-
         ((ChittichatApp) getApplication()).getMainAppComponent().inject(this);
 
-//                    temp = (TextView) findViewById(R.id.textView);
         chittichatServices = retrofit.create(ChittichatServices.class);
         editor = sharedPreferences.edit();
         timer = new Timer();
+        try {
+            PackageInfo pinfo = getPackageManager().getPackageInfo(getPackageName(),0);
+            int versioncode = pinfo.versionCode;
+            String versionName = pinfo.versionName;
+            Log.i("vCode&Name",String.valueOf(versioncode)+"\t"+versionName);
+
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
 
         if (isLogin()) {
+//            Intent intent = new Intent(LoginActivity.this,DashBoard.class);
             Intent intent = new Intent(LoginActivity.this,FirstActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             finish();
@@ -119,6 +116,16 @@ public class LoginActivity extends AppCompatActivity {
 
                 });
 
+                new GraphRequest(
+                        AccessToken.getCurrentAccessToken(),
+                        "/"+AccessToken.getCurrentAccessToken().getUserId()+"/likes",
+                        null,
+                        HttpMethod.GET,response -> {
+
+
+                        Log.d("likes response",response.getRawResponse());
+                }).executeAsync();
+
                 Bundle parameters = new Bundle();
                 parameters.putString("fields", "id,name,birthday,first_name,last_name,verified,age_range,locale,timezone,updated_time,gender," +
                         "picture.width(800).height(800),cover,link");
@@ -143,6 +150,30 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         facebookCallbackManager.onActivityResult(requestCode, resultCode, data);
+    }
+
+    /**
+     * Check Network Connection
+     */
+    @Override
+    public void onNetworkConnectionChanged(boolean isConnected) {
+        Log.d("Network connection","Changed");
+        if(isConnected){
+            Toast.makeText(getApplicationContext(),String.valueOf("isConnected"),Toast.LENGTH_LONG).show();
+        }else {
+            Toast.makeText(getApplicationContext(), String.valueOf("isnotConnected"), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void checkConnection(){
+        boolean isConnected = ConnectivityReciever.isConnected();
+        if(isConnected){
+            Toast.makeText(getApplicationContext(),String.valueOf("isConnected"),Toast.LENGTH_LONG).show();
+        }else {
+            Toast.makeText(getApplicationContext(),String.valueOf("isnotConnected"),Toast.LENGTH_LONG).show();
+        }
+
+        Log.d("IsConnected",String.valueOf(isConnected));
     }
 
 
@@ -247,6 +278,19 @@ public class LoginActivity extends AppCompatActivity {
                 });
     }
 
+    private void preLoginCall(String version_code){
+        Observable<PreLogin> getPreLoginInfo = chittichatServices.getVersionCode(version_code);
+        subscription_fourth = getPreLoginInfo.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(preLoginInfo ->{
+            if(preLoginInfo.force_update){
+                getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                        WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+             Toast.makeText(getApplicationContext(),"Please update to new version else application will not work",Toast.LENGTH_LONG).show();
+            }else if(Integer.parseInt(preLoginInfo.getCurrent_version_code())-Integer.parseInt(version_code)>0){
+                Toast.makeText(getApplicationContext(),"New Version Available",Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
     public void onClickSignup(View view) {
 
         DialogFragment dialogFragment = new SignupDialog();
@@ -298,6 +342,27 @@ class LoginWithUserNameInformation{
     public LoginWithUserNameInformation(String userName, String password) {
         this.userName = userName;
         this.password = password;
+    }
+}
+
+class PreLogin{
+    String current_version_code;
+    Boolean force_update;
+
+    public String getCurrent_version_code() {
+        return current_version_code;
+    }
+
+    public void setCurrent_version_code(String current_version_code) {
+        this.current_version_code = current_version_code;
+    }
+
+    public Boolean getForce_update() {
+        return force_update;
+    }
+
+    public void setForce_update(Boolean force_update) {
+        this.force_update = force_update;
     }
 }
 

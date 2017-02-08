@@ -5,22 +5,34 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#fdfdf4"
+    android:id="@+id/newgrouplayout"
     tools:context="in.co.nerdoo.chittichat.CreateNewGroup">
-
-    <ScrollView
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fitsSystemWindows="true">
+    <ProgressBar
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/progressBar1"
+        android:layout_centerInParent="true"
+        android:progressDrawable="@drawable/loading_circle"
+        />
+    <!--<ScrollView-->
+        <!--xmlns:android="http://schemas.android.com/apk/res/android"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="match_parent"-->
+        <!--android:fitsSystemWindows="true">-->
         <LinearLayout
             android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:focusable="true"
             android:focusableInTouchMode="true"
-            android:paddingTop="56dp"
+            android:paddingTop="45dp"
             android:paddingLeft="24dp"
-            android:paddingRight="24dp">
+
+            android:paddingRight="24dp"
+            android:id="@+id/linearLayout"
+            android:layout_alignParentTop="true"
+            android:layout_above="@+id/selectGroupImage">
+
             <android.support.design.widget.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -29,7 +41,6 @@
                 <EditText
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-
                 android:id="@+id/group_name"
                 android:hint="Group Name"/>
             </android.support.design.widget.TextInputLayout>
@@ -42,11 +53,20 @@
                 <EditText
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="textMultiLine"
+
                 android:hint="Group Introduction"
                 android:id="@+id/group_introduction"
                 android:layout_centerHorizontal="true"/>
             </android.support.design.widget.TextInputLayout>
+
+            <ProgressBar
+                style="?android:attr/progressBarStyleSmall"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/progressBar"
+                android:visibility="gone"
+                android:layout_gravity="center_horizontal"/>
+
             <android.support.design.widget.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -56,6 +76,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textMultiLine"
+                android:maxLines="2"
                 android:ems="10"
                 android:hint="Knock Knock Question"
                 android:id="@+id/knockKnockQuestion"/>
@@ -66,45 +87,49 @@
             android:foregroundGravity="center"
             android:id="@+id/group_category_spinner"
             android:spinnerMode="dialog"/>
-            <TextView
 
-                android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:gravity="right"
-                android:textStyle="bold"
-                android:text="Group Icon"/>
-            <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingTop="8dp">
+            <!--<LinearLayout-->
+                <!--android:orientation="horizontal"-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:paddingTop="8dp"-->
+                <!--android:weightSum="1">-->
             <!---->
 
 
-            <ImageButton
-                android:layout_height="150dp"
-                android:layout_width="200dp"
-                android:background="@null"
-                android:scaleType="fitCenter"
-                android:adjustViewBounds="true"
-                android:onClick="onClickSelectImageButton"
-                android:id="@+id/selectGroupImage"
-                android:src="@drawable/profile_icon7"/>
 
-                <Button
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Add"
-                    android:id="@+id/new_group"
-                    android:layout_marginTop="5dp"
-                    android:layout_marginLeft="5dp"
-                    android:onClick="onClickcreateNewGroup"
-                    android:textStyle="bold"
-                    android:layout_gravity="bottom|end"
-                    android:background="#959656"
-                    />
-            </LinearLayout>
+            <!--</LinearLayout>-->
 
             </LinearLayout>
-        </ScrollView>
+    <ImageButton
+        android:layout_height="200dp"
+        android:layout_width="262dp"
+        android:background="@null"
+        android:scaleType="fitCenter"
+        android:adjustViewBounds="true"
+        android:onClick="onClickSelectImageButton"
+        android:id="@+id/selectGroupImage"
+        android:src="@drawable/profile_icon7"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"/>
+
+    <ImageButton
+        android:layout_width="54dp"
+        android:layout_height="54dp"
+        android:text="Add"
+        android:id="@+id/new_group"
+        android:layout_gravity="bottom|end"
+        android:onClick="onClickcreateNewGroup"
+        android:src="@drawable/ic_arrow_forward_black_36dp"
+        android:background="@null"
+        android:layout_weight="0.14"
+        android:layout_marginBottom="48dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginRight="50dp"
+        android:layout_marginEnd="50dp"/>
+
+    <!--</ScrollView>-->
 </RelativeLayout>

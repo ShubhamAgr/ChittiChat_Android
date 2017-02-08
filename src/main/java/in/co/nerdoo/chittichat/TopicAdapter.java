@@ -17,6 +17,7 @@ import java.util.List;
 public class TopicAdapter extends RecyclerView.Adapter<TopicAdapter.ViewHolder> {
     private static List<Topics> topics;
     private  static Boolean ShowEdittext;
+    private  static Boolean isAdmin;
     private final int TOPICS_WITH_ARTICLE=0;
     public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         private Context viewContext;
@@ -34,6 +35,11 @@ public class TopicAdapter extends RecyclerView.Adapter<TopicAdapter.ViewHolder> 
             Intent intent = new Intent(viewContext,TopicActivity.class);
             intent.putExtra("TopicId",topics.get(getPosition()).get_id());
             intent.putExtra("ShowEdittext",ShowEdittext);
+            if(ShowTopics.isadmin){
+                intent.putExtra("isAdmin",true);
+            }else{
+                intent.putExtra("isAdmin",false);
+            }
             viewContext.startActivity(intent);
         }
     }

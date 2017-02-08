@@ -73,4 +73,5 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="title_activity_show_users_or_groups">Groups/Users</string>
+    <string name="title_activity_dash_board">DashBoardActivity</string>
 </resources>

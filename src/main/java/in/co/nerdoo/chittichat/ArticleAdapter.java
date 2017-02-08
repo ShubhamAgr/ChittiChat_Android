@@ -1,6 +1,7 @@
 package in.co.nerdoo.chittichat;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -12,6 +13,7 @@ import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -23,15 +25,20 @@ public class ArticleAdapter extends RecyclerView.Adapter<ArticleAdapter.ViewHold
     private final int  IMAGE = 1;
     private  final int VIDEO = 2;
     private final int  AUDIO = 3;
-    public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    HashSet<Integer> selectedPositions;
+    private  static boolean isAlreadyLongPressed;
+    public static class ViewHolder extends RecyclerView.ViewHolder{
         private ImageView article_image;
         private TextView article_content;
         private  TextView username_article1;
         private  TextView username_article2;
         private Context viewContext;
+
+        public View view;
         public ViewHolder(View v) {
             super(v);
-            v.setOnClickListener(this);
+            view = v;
+//            v.setOnClickListener(this);
             article_content =(TextView) v.findViewById(R.id.articleTextView);
             article_image = (ImageView) v.findViewById(R.id.articleImageView_card2);
             username_article1 = (TextView) v.findViewById(R.id.ArticleUsername_card1);
@@ -39,15 +46,28 @@ public class ArticleAdapter extends RecyclerView.Adapter<ArticleAdapter.ViewHold
             viewContext = v.getContext();
 
         }
-        @Override
-        public void onClick(View v) {
+//        @Override
+//        public void onClick(View v) {
+//            Log.v("clicked","true");
+//        }
 
-        }
+//        @Override
+//        public boolean onLongClick(View v) {
+//            if (TopicActivity.isAdmin) {
+//                Log.d("Long Pressed", "true");
+//
+//
+//            }
+//            Log.v("Long Pressed","true");
+//            return true;
+//        }
     }
 
 
     public ArticleAdapter(List<Articles> articles) {
         this.articles = articles;
+        this.selectedPositions = new HashSet<>();
+        isAlreadyLongPressed = false;
     }
 
 
@@ -98,19 +118,124 @@ public class ArticleAdapter extends RecyclerView.Adapter<ArticleAdapter.ViewHold
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
+        final Articles article = articles.get(position);
         switch (holder.getItemViewType()) {
             case TEXT:
-//                if(articles.get(position).getUsername() != null){
-//                    Log.d("publishers name",articles.get(position).getPublisher_name());
-//
-//                }
                 holder.username_article1.setText(articles.get(position).getPublisher_name());
                 holder.article_content.setText(articles.get(position).getArticle_content());
+                holder.itemView.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+                    @Override
+                    public void onViewAttachedToWindow(View v) {
+                        holder.itemView.setAlpha(article.isSelected()?0.4f:1.0f);
+                        holder.itemView.setBackgroundColor(article.isSelected()?Color.parseColor("#872f93ff"):Color.TRANSPARENT);
+                        Log.d("Attched",String.valueOf(position)+"attached");
+                    }
+
+                    @Override
+                    public void onViewDetachedFromWindow(View v) {
+                        Log.d("Attched",String.valueOf(position)+"attached");
+                    }
+                });
+                holder.itemView.removeOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+                    @Override
+                    public void onViewAttachedToWindow(View v) {
+                        holder.itemView.setAlpha(article.isSelected()?0.4f:1.0f);
+                        holder.itemView.setBackgroundColor(article.isSelected()?Color.parseColor("#872f93ff"):Color.TRANSPARENT);
+                        Log.d("Attched",String.valueOf(position)+"attached");
+                    }
+
+                    @Override
+                    public void onViewDetachedFromWindow(View v) {
+                        Log.d("Attched",String.valueOf(position)+"attached");
+                    }
+                });
+
+                holder.itemView.setOnClickListener(v1 -> {
+                    Log.d("Position",String.valueOf(position));
+                    if(TopicActivity.isAdmin && isAlreadyLongPressed){
+                        article.setSelected(!article.isSelected());
+                        holder.itemView.setAlpha(article.isSelected()?0.4f:1.0f);
+                        holder.itemView.setBackgroundColor(article.isSelected()?Color.parseColor("#872f93ff"):Color.TRANSPARENT);
+                        TopicActivity.deleteArticleIds.add(articles.get(position).get_id());
+                    }else {
+                        Log.v("selected status","Normal");
+                    }
+                });
+
+                holder.itemView.setOnLongClickListener(v -> {
+                    if(TopicActivity.isAdmin){
+
+                        Log.d("Position",String.valueOf(position));
+                        isAlreadyLongPressed = true;
+                        article.setSelected(!article.isSelected());
+                        holder.itemView.setAlpha(article.isSelected()?0.4f:1.0f);
+                        holder.itemView.setBackgroundColor(article.isSelected()?Color.parseColor("#872f93ff"):Color.TRANSPARENT);
+                        TopicActivity.deleteArticleIds.add(articles.get(position).get_id());
+                        new TopicActivity().onLongPressedArticle();
+                        return true;
+                    }
+                    return false;
+                });
                 break;
             case IMAGE:
+                holder.itemView.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+                    @Override
+                    public void onViewAttachedToWindow(View v) {
+                        holder.itemView.setAlpha(article.isSelected()?0.4f:1.0f);
+                        holder.itemView.setBackgroundColor(article.isSelected()?Color.parseColor("#872f93ff"):Color.TRANSPARENT);
+                        Log.d("Attched",String.valueOf(position)+"attached");
+                    }
+
+                    @Override
+                    public void onViewDetachedFromWindow(View v) {
+                        Log.d("Attched",String.valueOf(position)+"attached");
+                    }
+                });
+                holder.itemView.removeOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+                    @Override
+                    public void onViewAttachedToWindow(View v) {
+                        holder.itemView.setAlpha(article.isSelected()?0.4f:1.0f);
+                        holder.itemView.setBackgroundColor(article.isSelected()?Color.parseColor("#872f93ff"):Color.TRANSPARENT);
+                        Log.d("Attched",String.valueOf(position)+"attached");
+                    }
+
+                    @Override
+                    public void onViewDetachedFromWindow(View v) {
+                        Log.d("Attched",String.valueOf(position)+"attached");
+                    }
+                });
+
+
                 holder.username_article2.setText(articles.get(position).getPublisher_name());
                 Picasso.with(holder.viewContext).load(ChittichatApp.getBaseUrl()+"/images/"+articles.get(position)
-                        .getArticle_content()).into(holder.article_image);
+                        .getArticle_content()).resize(600,500).centerInside().into(holder.article_image);
+//                holder.setIsRecyclable(false);
+                holder.itemView.setOnClickListener(v1 -> {
+                    Log.d("Position",String.valueOf(position));
+                    if(TopicActivity.isAdmin && isAlreadyLongPressed){
+                        article.setSelected(!article.isSelected());
+                        holder.itemView.setAlpha(article.isSelected()?0.4f:1.0f);
+                        holder.itemView.setBackgroundColor(article.isSelected()?Color.parseColor("#872f93ff"):Color.TRANSPARENT);
+                        TopicActivity.deleteArticleIds.add(articles.get(position).get_id());
+                    }else {
+                        Log.v("selected status","Normal");
+                    }
+                });
+
+                holder.itemView.setOnLongClickListener(v -> {
+                    if(TopicActivity.isAdmin){
+
+                        Log.d("Position",String.valueOf(position));
+                        isAlreadyLongPressed = true;
+                        article.setSelected(!article.isSelected());
+                        holder.itemView.setAlpha(article.isSelected()?0.4f:1.0f);
+                        holder.itemView.setBackgroundColor(article.isSelected()?Color.parseColor("#872f93ff"):Color.TRANSPARENT);
+                        TopicActivity.deleteArticleIds.add(articles.get(position).get_id());
+                        new TopicActivity().onLongPressedArticle();
+                        return true;
+                    }
+                    return false;
+                });
                 break;
             case AUDIO:
                 break;
@@ -120,16 +245,13 @@ public class ArticleAdapter extends RecyclerView.Adapter<ArticleAdapter.ViewHold
                 Toast.makeText(holder.viewContext,"Case not satisfied in on bind",Toast.LENGTH_SHORT).show();
         }
     }
+    @Override
+    public long getItemId(int position) {
+     return  getItemId(position);
+    }
 
     @Override
     public int getItemCount() {
-//        if(articles == null){
-//            return 0;
-//        }else if(articles.isEmpty()){
-//            return 0;
-//        }else {
-//            return articles.size();
-//        }
         return  articles.size();
 
     }

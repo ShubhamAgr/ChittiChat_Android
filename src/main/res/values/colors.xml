@@ -1,14 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#57072c</color>
-    <color name="colorPrimaryDark">#2c0416</color>
-    <color name="colorAccent">#FF4081</color>
+    <!--<color name="colorPrimary">#03A9F4</color>-->
+    <!--<color name="colorPrimaryDark">#0288D1</color>-->
+    <!--<color name="colorAccent">#00BCD4</color>-->
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="primary_light">#C5CAE9</color>
+    <color name="colorAccent">#448AFF</color>
+    <color name="primary_text">#212121</color>
+    <color name="secondary_text">#757575</color>
+    <color name="icons">#FFFFFF</color>
+    <color name="divider">#BDBDBD</color>
     <color name="white">#FFFFFF</color>
     <color name="black">#000000</color>
     <color name="grey">#F0F0F0</color>
     <color name="back">#FFFFFA</color>
-    <!---->
-    <!---->
+    <color name="onSelected">#872f93ff</color>
+    <color name ="background">#fdfdf4</color>
+    <color name ="loading_background">#B0000000</color>
+
     <!--<color name="colorAccent">#FF4081</color>-->
     <color name="viewBg">#f1f5f8</color>
     <color name="album_title">#4c4c4c</color>

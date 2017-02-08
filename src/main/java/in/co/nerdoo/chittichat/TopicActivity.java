@@ -1,13 +1,19 @@
 package in.co.nerdoo.chittichat;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.content.ContentUris;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Environment;
 import android.os.Parcelable;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
@@ -30,6 +36,9 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -49,6 +58,7 @@ import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
 public class TopicActivity extends AppCompatActivity {
+    private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 0;
     @Inject
     Socket socket;
     @Inject
@@ -63,6 +73,7 @@ public class TopicActivity extends AppCompatActivity {
     private static List<Articles> articlesList;
     private static RecyclerView recyclerView;
     private static Boolean ShowEdittext;
+    public static Boolean isAdmin;
     private  static LinearLayout sendTextLayout;
     private  static ArticleAdapter articleAdapter;
     private static LinearLayoutManager manager;
@@ -71,7 +82,9 @@ public class TopicActivity extends AppCompatActivity {
     private static int finalItem;
     private static final int PAGE_SIZE = 8;
     Subscription s1,s2,s3,s4,s5,s6,s7,s8;
-    private ImageButton addPhoto;
+    private static ImageButton addPhoto,deleteButton;
+    private static ArrayList<String> id;
+    public static HashSet<String>  deleteArticleIds;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -80,17 +93,20 @@ public class TopicActivity extends AppCompatActivity {
         sendTextLayout = (LinearLayout)findViewById(R.id.linearLayout2) ;
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_articles);
         addPhoto = (ImageButton) findViewById(R.id.myaddphotbutton);
+        deleteButton = (ImageButton) findViewById(R.id.deletebutton);
         toolbar.setTitle("Chats");
         toolbar.showOverflowMenu();
         setSupportActionBar(toolbar);
         ((ChittichatApp) getApplication()).getMainAppComponent().inject(this);
-
+        id = new ArrayList<>();
+        deleteArticleIds = new HashSet<>();
         Bundle extras = getIntent().getExtras();
         if(extras == null){
             topicId = null;
         }else{
             topicId = extras.getString("TopicId");
             ShowEdittext = extras.getBoolean("ShowEdittext");
+            isAdmin = extras.getBoolean("isAdmin");
             token = sharedPreferences.getString("ChittiChat_token",null);
         }
         if(!ShowEdittext){
@@ -105,7 +121,7 @@ public class TopicActivity extends AppCompatActivity {
         if(!socket.connected()){
             socket.connect();
         }
-//
+
         JSONObject joinRoom = new JSONObject();
         try{
             joinRoom.put("token",sharedPreferences.getString("ChittiChat_token",null));
@@ -127,7 +143,8 @@ public class TopicActivity extends AppCompatActivity {
 
         chittichatServices = retrofit.create(ChittichatServices.class);
         recyclerView = (RecyclerView) findViewById(R.id.articles_recycler_view);
-//        recyclerView.setHasFixedSize(true);
+        recyclerView.setHasFixedSize(true);
+        recyclerView.setItemAnimator(null);
         manager = new LinearLayoutManager(this);
         manager.setStackFromEnd(true);
         manager.setReverseLayout(true);
@@ -138,6 +155,26 @@ public class TopicActivity extends AppCompatActivity {
         initialItem = 0;
         finalItem = 10;
         getInitialArticle(token,topicId,initialItem+"_"+finalItem);
+
+    }
+    public static void onLongPressedArticle(){
+        deleteButton.setVisibility(View.VISIBLE);
+    }
+
+    @TargetApi(Build.VERSION_CODES.M)
+    public void askpermission(){
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+            if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+                if (shouldShowRequestPermissionRationale(
+                        Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                }
+
+                requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                        MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE);
+
+            }
+        }
 
     }
 
@@ -250,7 +287,6 @@ public class TopicActivity extends AppCompatActivity {
 
                 Parcelable recyclerViewState;
                 recyclerViewState = recyclerView.getLayoutManager().onSaveInstanceState();
-
                     articlesList.addAll(articles);
                     articleAdapter.notifyDataSetChanged();
                     recyclerView.getLayoutManager().onRestoreInstanceState(recyclerViewState);
@@ -303,44 +339,125 @@ public class TopicActivity extends AppCompatActivity {
 
     }
     public void onaddImage(View view){
-        Intent intent = new Intent();
-
-        intent.setType("image/*");
-        intent.setAction(Intent.ACTION_GET_CONTENT);
         try{
-            startActivityForResult(intent,PICK_IMAGE_REQUEST);//Intent.createChooser(intent, "Select Picture"), PICK_IMAGE_REQUEST);
+            Intent pickIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            pickIntent.setType("image/*");
+
+            startActivityForResult(pickIntent, PICK_IMAGE_REQUEST);
+
         }catch (Exception e){
             Log.d("e",e.getMessage());
         }
     }
+
+
     @TargetApi(Build.VERSION_CODES.KITKAT)
-    private String getPathFromURI(Uri contentUri) {
-        //Will work only in kitkat......... and above...
-        String wholeID = DocumentsContract.getDocumentId(contentUri);
+    public static String getPathFromURI(final Context context, final Uri uri) {
 
-        // Split at colon, use second item in the array
-        String id = wholeID.split(":")[1];
+        final boolean isKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
 
-        String[] column = { MediaStore.Images.Media.DATA };
+        // DocumentProvider
+        if (isKitKat && DocumentsContract.isDocumentUri(context, uri)) {
 
-        // where id is equal to
-        String sel = MediaStore.Images.Media._ID + "=?";
+            // ExternalStorageProvider
+            if (isExternalStorageDocument(uri)) {
+                final String docId = DocumentsContract.getDocumentId(uri);
+                final String[] split = docId.split(":");
+                final String type = split[0];
 
-        Cursor cursor = getContentResolver().
-                query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                        column, sel, new String[]{ id }, null);
+                if ("primary".equalsIgnoreCase(type)) {
+                    Log.d("path",Environment.getExternalStorageDirectory() + "/" + split[1]);
+                    return Environment.getExternalStorageDirectory() + "/" + split[1];
+                }
 
-        String filePath = "";
 
-        int columnIndex = cursor.getColumnIndex(column[0]);
+            }
+            // DownloadsProvider
+            else if (isDownloadsDocument(uri)) {
 
-        if (cursor.moveToFirst()) {
-            filePath = cursor.getString(columnIndex);
+                final String id = DocumentsContract.getDocumentId(uri);
+                final Uri contentUri = ContentUris.withAppendedId(
+                        Uri.parse("content://downloads/public_downloads"), Long.valueOf(id));
+
+                return getDataColumn(context, contentUri, null, null);
+            }
+            // MediaProvider
+            else if (isMediaDocument(uri)) {
+                final String docId = DocumentsContract.getDocumentId(uri);
+                final String[] split = docId.split(":");
+                final String type = split[0];
+
+                Uri contentUri = null;
+                if ("image".equals(type)) {
+                    contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+                } else if ("video".equals(type)) {
+                    contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
+                } else if ("audio".equals(type)) {
+                    contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+                }
+
+                final String selection = "_id=?";
+                final String[] selectionArgs = new String[] {
+                        split[1]
+                };
+
+                return getDataColumn(context, contentUri, selection, selectionArgs);
+            }
+        }
+        // MediaStore (and general)
+        else if ("content".equalsIgnoreCase(uri.getScheme())) {
+
+            // Return the remote address
+            if (isGooglePhotosUri(uri))
+                return uri.getLastPathSegment();
+
+            return getDataColumn(context, uri, null, null);
+        }
+        // File
+        else if ("file".equalsIgnoreCase(uri.getScheme())) {
+            return uri.getPath();
         }
 
-        cursor.close();
-        return filePath;
+        return null;
     }
+
+    public static String getDataColumn(Context context, Uri uri, String selection,
+                                       String[] selectionArgs) {
+
+        Cursor cursor = null;
+        final String column = "_data";
+        final String[] projection = {
+                column
+        };
+
+        try {
+            cursor = context.getContentResolver().query(uri, projection, selection, selectionArgs,
+                    null);
+            if (cursor != null && cursor.moveToFirst()) {
+                final int index = cursor.getColumnIndexOrThrow(column);
+                return cursor.getString(index);
+            }
+        } finally {
+            if (cursor != null)
+                cursor.close();
+        }
+        return null;
+    }
+    public static boolean isExternalStorageDocument(Uri uri) {
+        return "com.android.externalstorage.documents".equals(uri.getAuthority());
+    }
+    public static boolean isDownloadsDocument(Uri uri) {
+        return "com.android.providers.downloads.documents".equals(uri.getAuthority());
+    }
+
+    public static boolean isMediaDocument(Uri uri) {
+        return "com.android.providers.media.documents".equals(uri.getAuthority());
+    }
+
+    public static boolean isGooglePhotosUri(Uri uri) {
+        return "com.google.android.apps.photos.content".equals(uri.getAuthority());
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -373,7 +490,7 @@ public class TopicActivity extends AppCompatActivity {
 
 
     private void postImage(Uri imageUri){
-        String path = getPathFromURI(imageUri);
+        String path = getPathFromURI(this,imageUri);
         if(path.equals("")){
                 Log.d("imageUri",imageUri.toString());
                 Log.d("imageUri.path",imageUri.getPath());
@@ -382,7 +499,17 @@ public class TopicActivity extends AppCompatActivity {
             Log.d("file path",path);
             File file = new File(path);
 
-            File CompressedImageFile = Compressor.getDefault(this).compressToFile(file);
+
+           File CompressedImageFile = new Compressor.Builder(this)
+                    .setMaxWidth(2048)
+                    .setMaxHeight(1024)
+                    .setQuality(60)
+                    .setCompressFormat(Bitmap.CompressFormat.JPEG)
+                    .setDestinationDirectoryPath(Environment.getExternalStoragePublicDirectory(
+                            Environment.DIRECTORY_PICTURES).getAbsolutePath())
+                    .build()
+                    .compressToFile(file);
+//            File CompressedImageFile = Compressor.getDefault(this).compressToFile(file);
 
             RequestBody fbody = RequestBody.create(MediaType.parse("image/*"), CompressedImageFile);
             RequestBody mytoken = RequestBody.create(MediaType.parse("text/plain"), token);
@@ -462,6 +589,13 @@ public class TopicActivity extends AppCompatActivity {
 //        }
     };
 
+    public void onClickDelete(View view){
+        Iterator<String> iterator = deleteArticleIds.iterator();
+        while (iterator.hasNext()){
+            Log.d("Article_Delete",iterator.next());
+        }
+        deleteButton.setVisibility(View.GONE);
+    }
 
     public void onClickSend(View view){
         //upload your articles....
@@ -532,7 +666,14 @@ class  MediaInformation{
 }
 class Articles{
     private String _id,username,created_on,published_by,publisher_name,content_type,article_content;
+    private boolean isSelected;
 
+    public  void setSelected(boolean selected){
+        isSelected = selected;
+    }
+    public boolean isSelected(){
+        return isSelected;
+    }
     public String getPublisher_name() {
         return publisher_name;
     }

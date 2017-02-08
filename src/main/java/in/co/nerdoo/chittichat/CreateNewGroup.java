@@ -20,10 +20,14 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -77,6 +81,8 @@ public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnI
     private static CallbackManager callbackManager;
     private static ShareDialog shareDialog;
     private  static ResponseOnNewGroup myresponse;
+    private static ProgressBar progressBar;
+    private static RelativeLayout relativeLayout;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -87,15 +93,22 @@ public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnI
         group_name=(EditText) findViewById(R.id.group_name);
         group_introduction = (EditText) findViewById(R.id.group_introduction);
         knockKnockQuestion = (EditText) findViewById(R.id.knockKnockQuestion);
-
+        relativeLayout = (RelativeLayout) findViewById(R.id.newgrouplayout);
+        progressBar = (ProgressBar) findViewById(R.id.progressBar1);
+        progressBar.setVisibility(View.GONE);
         spinner =  (Spinner) findViewById(R.id.group_category_spinner);
         selectGroupImage = (ImageButton) findViewById(R.id.selectGroupImage);
         spinner.setOnItemSelectedListener(this);
         List<String> categories =  new ArrayList<>();
-        categories.add("miscellaneous");
-        categories.add("Entertaintment");
         categories.add("Social");
-        categories.add("Education");
+        categories.add("Entertaintment");
+        categories.add("Hangout");
+        categories.add("Learning");
+        categories.add("Technology");
+        categories.add("Brands & Promotion");
+        categories.add("Business");
+        categories.add("FAQ's");
+        categories.add("Miscellaneous");
         ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(this,android.R.layout.simple_spinner_item,categories);
         arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(arrayAdapter);
@@ -106,7 +119,7 @@ public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnI
             @Override
             public void onSuccess(Sharer.Result result) {
                 Toast.makeText(getApplicationContext(),"post shared",Toast.LENGTH_SHORT);
-                postGroupImage(myresponse.getGroupId());
+                 postGroupImage(myresponse.getGroupId());
             }
 
             @Override
@@ -138,41 +151,47 @@ public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnI
         chittichatServices = retrofit.create(ChittichatServices.class);
 
         Observable<ResponseOnNewGroup> getResponseOnNewGroup = chittichatServices.getResponseOnNewGroup(newGroupInformation);
-        subscription_first = getResponseOnNewGroup.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe
+        subscription_first = getResponseOnNewGroup.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe
                 (responseOnNewGroup->{
-                    if(uploadImageUri.toString().equals("")){
-                        Log.d("abcdefghij","1");
-                        Intent intent = new Intent(CreateNewGroup.this,FirstActivity.class);
-                        startActivity(intent);
-                        finish();
-                    }else{
-                        Log.d("abcaa",responseOnNewGroup.getMessage()+"ab");
+                    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                    progressBar.setVisibility(View.GONE);
+                    relativeLayout.setBackgroundColor(getResources().getColor(R.color.background));
+//                    if(file == null){
+//                        Log.d("abcdefghij","1");
+//                        Intent intent = new Intent(CreateNewGroup.this,FirstActivity.class);
+//                        startActivity(intent);
+//                        finish();
+//                    }else{
+//                        Log.d("abcaa",responseOnNewGroup.getMessage()+"ab");
                         if(responseOnNewGroup.getMessage().equals("unsuccessful")){
                             Log.d("abcdefghij","2");
                             Intent intent = new Intent(CreateNewGroup.this,FirstActivity.class);
                             startActivity(intent);
                             finish();
                         }else{
-                            Log.d("abcdefghij","3");
                             myresponse = responseOnNewGroup;
                             Log.d("abcdefghij",responseOnNewGroup.getGroupId());
                             if (ShareDialog.canShow(ShareLinkContent.class)) {
                                 ShareLinkContent groupcontent = new ShareLinkContent.Builder()
                                         .setContentTitle("Hello there, Follow my Group \""+group_name.getText().toString()+"\" in ChittiChat")
                                         .setContentUrl(Uri.parse("https://play.google.com/store/apps/details?id=in.co.nerdoo.com.chittichat.chittichat"))
-
                                         .build();
                                 //.setContentUrl(Uri.parse("http://developers.facebook.com/android"))//give the link of chittichat application...
 
-
                                 shareDialog.show(groupcontent);
+
                             }
-//                        postGroupImage(responseOnNewGroup.getGroupId());
+
                         }
-                    }
+//                    }
+
+
                     subscription_first.unsubscribe();
 
                 },throwable -> {
+                    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                    progressBar.setVisibility(View.GONE);
+                    relativeLayout.setBackgroundColor(getResources().getColor(R.color.background));
                     if(throwable instanceof HttpException) {
 //                ((HttpException) throwable).code() == 400;
                         Log.e("error",((HttpException) throwable).response().errorBody().toString());
@@ -185,7 +204,16 @@ public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnI
                 });
     }
     public void onClickcreateNewGroup(View view){
+        knockKnockQuestion.clearFocus();
+        group_name.clearFocus();
+        group_introduction.clearFocus();
         if(!(group_name.getText().toString().equals("") && knockKnockQuestion.getText().toString().equals(""))){
+
+            getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+
+            relativeLayout.setBackgroundColor(getResources().getColor(R.color.loading_background));
+            progressBar.setVisibility(View.VISIBLE);
             NewGroupInformation newGroupInformation = new NewGroupInformation(sharedPreferences.getString("ChittiChat_token","false"),group_name
                     .getText().toString(),group_introduction.getText().toString(),selectedCategory,knockKnockQuestion.getText().toString());
             requestCreateNewGroup(newGroupInformation);
@@ -203,27 +231,15 @@ public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnI
         return Uri.parse(path);
     }
     public void onClickSelectImageButton(View view){
-        Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-
-        intent.setType("image/*");
-        intent.setAction(Intent.ACTION_GET_CONTENT);
-        intent.putExtra("crop", "true");
-        intent.putExtra("aspectX", 0);
-        intent.putExtra("aspectY", 0);
-        intent.putExtra("outputX", 200);
-        intent.putExtra("outputY", 150);
-
-
         try{
-            intent.putExtra("return-data", true);
+            Intent pickIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            pickIntent.setType("image/*");
 
-            startActivityForResult(intent,PICK_IMAGE_REQUEST);//Intent.createChooser(intent, "Select//Intent.createChooser(intent,"Select Picture")
+            startActivityForResult(pickIntent, PICK_IMAGE_REQUEST);
 
         }catch (Exception e){
             Log.d("e",e.getMessage());
         }
-
-
     }
     private void performCrop(Uri picUri) {
         try {
@@ -260,6 +276,23 @@ public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnI
 
 
 
+
+    public String getRealPathFromURI(Context context, Uri contentUri) {
+        Cursor cursor = null;
+        try {
+            String[] proj = { MediaStore.Images.Media.DATA };
+            cursor = context.getContentResolver().query(contentUri,  proj, null, null, null);
+            int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+            cursor.moveToFirst();
+            return cursor.getString(column_index);
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+    }
+
+
     @TargetApi(Build.VERSION_CODES.KITKAT)
     public static String getPath(final Context context, final Uri uri) {
 
@@ -267,6 +300,7 @@ public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnI
 
         // DocumentProvider
         if (isKitKat && DocumentsContract.isDocumentUri(context, uri)) {
+
             // ExternalStorageProvider
             if (isExternalStorageDocument(uri)) {
                 final String docId = DocumentsContract.getDocumentId(uri);
@@ -274,8 +308,11 @@ public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnI
                 final String type = split[0];
 
                 if ("primary".equalsIgnoreCase(type)) {
+                    Log.d("path",Environment.getExternalStorageDirectory() + "/" + split[1]);
                     return Environment.getExternalStorageDirectory() + "/" + split[1];
                 }
+
+
             }
             // DownloadsProvider
             else if (isDownloadsDocument(uri)) {
@@ -309,14 +346,16 @@ public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnI
                 return getDataColumn(context, contentUri, selection, selectionArgs);
             }
         }
-
+        // MediaStore (and general)
         else if ("content".equalsIgnoreCase(uri.getScheme())) {
 
+            // Return the remote address
             if (isGooglePhotosUri(uri))
                 return uri.getLastPathSegment();
 
             return getDataColumn(context, uri, null, null);
         }
+        // File
         else if ("file".equalsIgnoreCase(uri.getScheme())) {
             return uri.getPath();
         }
@@ -365,12 +404,16 @@ public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnI
 
     private void postGroupImage(String groupId){
         Toast.makeText(getApplicationContext(),"Image uploading",Toast.LENGTH_SHORT).show();
-        Log.d("hi","hi"+groupId);
-        Log.d("myuploadImage",uploadImageUri.toString());
         if(file == null){
-            Log.d("imageUri",uploadImageUri.toString());
-            Log.d("imageUri.path",uploadImageUri.getPath());
-            Log.d("file path:","is null");
+            Intent intent = new Intent(CreateNewGroup.this,FirstActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            finish();
+            startActivity(intent);
+//            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+//            progressBar.setVisibility(View.GONE);
+//            relativeLayout.setBackgroundColor(getResources().getColor(R.color.background));
+
+
         }else{
             Log.d("paths",uploadImageUri.getPath());
             File compressedImageFile = Compressor.getDefault(this).compressToFile(file);
@@ -380,18 +423,21 @@ public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnI
 
             Observable<ResponseMessage> getResponseOnImageUpload = chittichatServices.getResponseOnGroupImage(fbody,mytoken,mgroupId);
             s2 = getResponseOnImageUpload.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(responseMessage->{
+                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                progressBar.setVisibility(View.GONE);
+                relativeLayout.setBackgroundColor(getResources().getColor(R.color.background));
                 Log.d("Image",responseMessage.getMessage());
                 if(responseMessage.getMessage().equals("successful")){
                     Toast.makeText(getApplicationContext(),"Image Uploaded",Toast.LENGTH_SHORT).show();
                     if(file.exists())
                         file.delete();
-                    s2.unsubscribe();
+
                     Intent intent = new Intent(CreateNewGroup.this,FirstActivity.class);
                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                     finish();
                     startActivity(intent);
 
-
+                    s2.unsubscribe();
                 }
             },throwable -> {
                 if(throwable instanceof HttpException) {
@@ -402,6 +448,10 @@ public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnI
                 if (throwable instanceof IOException) {
                     // A network or conversion error happened
                 }
+                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                relativeLayout.setBackgroundColor(getResources().getColor(R.color.background));
+                progressBar.setVisibility(View.GONE);
+
                 s2.unsubscribe();
             });
         }

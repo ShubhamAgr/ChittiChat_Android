@@ -48,7 +48,8 @@ public class GroupAddRequestDialog extends DialogFragment {
                     public void onClick(DialogInterface dialog, int which) {
                         knockKnockAnswer = (EditText) promptView.findViewById(R.id.knockKnockAnswer_request);
                         NewRequestInformation newRequestInformation = new NewRequestInformation(sharedPreferences.getString("ChittiChat_token",
-                                null),sharedPreferences.getString("currentGroupId",null),knockKnockAnswer.getText().toString());
+                                null),sharedPreferences.getString("first_name",null),sharedPreferences.getString("currentGroupId",null),
+                                knockKnockAnswer.getText().toString());
                         postNewRequest(newRequestInformation);
                     }
                 });
@@ -78,11 +79,12 @@ public class GroupAddRequestDialog extends DialogFragment {
     }
 }
 class NewRequestInformation{
-    private String token,group_id,answer;
+    private String token,username,group_id,answer;
 
-    public NewRequestInformation(String token, String group_id, String answer) {
+    public NewRequestInformation(String token,String username,String group_id, String answer) {
         this.token = token;
         this.group_id = group_id;
         this.answer = answer;
+        this.username = username;
     }
 }

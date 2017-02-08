@@ -21,4 +21,9 @@ public interface MainAppComponent {
     void inject(GroupAddRequestDialog groupAddRequestDialog);
     void inject(NotificationActivity notificationActivity);
     void inject(NotificationAdapter notificationAdapter);
+    void inject(AllGroupsFragment allGroupsFragment);
+    void inject(ActiveGroupFragment activeGroupFragment);
+    void inject(FollowingGroupFragment followingGroupFragment);
+    void inject(MembersGroupFragment membersGroupFragment);
+    void inject(SuggestionGroupFragment suggestionGroupFragment);
 }

@@ -81,9 +81,9 @@ public class NotificationActivity extends AppCompatActivity {
                     mygroupRequestInfo = groupRequestsNotifications;
                     notificationAdapter = new NotificationAdapter(groupRequestsNotifications);
                     recyclerView.setAdapter(notificationAdapter);
-                    for(groupRequestsNotification notification:groupRequestsNotifications){
-                        getUsernameByUserId(notification);
-                    }
+//                    for(groupRequestsNotification notification:groupRequestsNotifications){
+//                        getUsernameByUserId(notification);
+//                    }
                     s1.unsubscribe();
                 },throwable -> {
                     if(throwable instanceof HttpException) {

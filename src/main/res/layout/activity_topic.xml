@@ -27,16 +27,21 @@
                 android:layout_gravity="center|right"
                 android:background="@null"
                 android:src="@drawable/ic_insert_photo_white_24dp"/>
+        <ImageButton
+            android:layout_height="?attr/actionBarSize"
+            android:layout_width="wrap_content"
+            android:id="@+id/deletebutton"
+            android:visibility="gone"
+            android:foregroundGravity="center"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="6dp"
+            android:onClick="onClickDelete"
+            android:layout_gravity="center|right"
+            android:background="@null"
+            android:src="@drawable/ic_delete_forever_white_24dp"/>
 
 
     </android.support.v7.widget.Toolbar>
-        <!--<ScrollView-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:id="@+id/scrollView">-->
-
-        <!--</ScrollView>-->
-
 
     <LinearLayout
         android:orientation="horizontal"
@@ -73,6 +78,7 @@
             android:layout_gravity="bottom|end"
             android:id="@+id/send_button"
             />
+
     </LinearLayout>
 
     <android.support.v7.widget.RecyclerView

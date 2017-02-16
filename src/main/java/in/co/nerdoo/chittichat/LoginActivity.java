@@ -67,23 +67,14 @@ public class LoginActivity extends AppCompatActivity implements ConnectivityReci
         chittichatServices = retrofit.create(ChittichatServices.class);
         editor = sharedPreferences.edit();
         timer = new Timer();
-        try {
-            PackageInfo pinfo = getPackageManager().getPackageInfo(getPackageName(),0);
-            int versioncode = pinfo.versionCode;
-            String versionName = pinfo.versionName;
-            Log.i("vCode&Name",String.valueOf(versioncode)+"\t"+versionName);
-
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-        }
-
-        if (isLogin()) {
-//            Intent intent = new Intent(LoginActivity.this,DashBoard.class);
-            Intent intent = new Intent(LoginActivity.this,FirstActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            finish();
-            startActivity(intent);
-        }
+        checkConnection();
+//        if (isLogin()) {
+////            Intent intent = new Intent(LoginActivity.this,DashBoard.class);
+//            Intent intent = new Intent(LoginActivity.this,FirstActivity.class);
+//            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+//            finish();
+//            startActivity(intent);
+//        }
 
         loginWithFacebook = (LoginButton) findViewById(R.id.facebook_login_button);
         loginWithFacebook.setReadPermissions(Arrays.asList("public_profile", "user_likes"));
@@ -159,7 +150,7 @@ public class LoginActivity extends AppCompatActivity implements ConnectivityReci
     public void onNetworkConnectionChanged(boolean isConnected) {
         Log.d("Network connection","Changed");
         if(isConnected){
-            Toast.makeText(getApplicationContext(),String.valueOf("isConnected"),Toast.LENGTH_LONG).show();
+            checkConnection();
         }else {
             Toast.makeText(getApplicationContext(), String.valueOf("isnotConnected"), Toast.LENGTH_LONG).show();
         }
@@ -168,9 +159,17 @@ public class LoginActivity extends AppCompatActivity implements ConnectivityReci
     private void checkConnection(){
         boolean isConnected = ConnectivityReciever.isConnected();
         if(isConnected){
-            Toast.makeText(getApplicationContext(),String.valueOf("isConnected"),Toast.LENGTH_LONG).show();
+            try {
+                PackageInfo pinfo = getPackageManager().getPackageInfo(getPackageName(),0);
+                int versioncode = pinfo.versionCode;
+                String versionName = pinfo.versionName;
+                Log.i("vCode&Name",String.valueOf(versioncode)+"\t"+versionName);
+                preLoginCall(String.valueOf(versioncode));
+            } catch (PackageManager.NameNotFoundException e) {
+                e.printStackTrace();
+            }
         }else {
-            Toast.makeText(getApplicationContext(),String.valueOf("isnotConnected"),Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(),String.valueOf("Please Check your Internet Connection"),Toast.LENGTH_LONG).show();
         }
 
         Log.d("IsConnected",String.valueOf(isConnected));
@@ -281,13 +280,39 @@ public class LoginActivity extends AppCompatActivity implements ConnectivityReci
     private void preLoginCall(String version_code){
         Observable<PreLogin> getPreLoginInfo = chittichatServices.getVersionCode(version_code);
         subscription_fourth = getPreLoginInfo.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(preLoginInfo ->{
+            Log.d("forceupdate",String.valueOf(preLoginInfo.force_update));
             if(preLoginInfo.force_update){
                 getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
                         WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
              Toast.makeText(getApplicationContext(),"Please update to new version else application will not work",Toast.LENGTH_LONG).show();
             }else if(Integer.parseInt(preLoginInfo.getCurrent_version_code())-Integer.parseInt(version_code)>0){
                 Toast.makeText(getApplicationContext(),"New Version Available",Toast.LENGTH_SHORT).show();
+                if (isLogin()) {
+//            Intent intent = new Intent(LoginActivity.this,DashBoard.class);
+                    Intent intent = new Intent(LoginActivity.this,FirstActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    finish();
+                    startActivity(intent);
+                }
+            }else{
+                if (isLogin()) {
+//            Intent intent = new Intent(LoginActivity.this,DashBoard.class);
+                    Intent intent = new Intent(LoginActivity.this,FirstActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    finish();
+                    startActivity(intent);
+                }
             }
+        },throwable -> {
+            if(throwable instanceof HttpException) {
+//                ((HttpException) throwable).code() == 400;
+                Log.e("error",((HttpException) throwable).response().errorBody().toString());
+
+            }
+            if (throwable instanceof IOException) {
+                // A network or conversion error happened
+            }
+            subscription_fourth.unsubscribe();
         });
     }
 

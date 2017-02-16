@@ -38,7 +38,6 @@ public class ArticleAdapter extends RecyclerView.Adapter<ArticleAdapter.ViewHold
         public ViewHolder(View v) {
             super(v);
             view = v;
-//            v.setOnClickListener(this);
             article_content =(TextView) v.findViewById(R.id.articleTextView);
             article_image = (ImageView) v.findViewById(R.id.articleImageView_card2);
             username_article1 = (TextView) v.findViewById(R.id.ArticleUsername_card1);
@@ -46,21 +45,6 @@ public class ArticleAdapter extends RecyclerView.Adapter<ArticleAdapter.ViewHold
             viewContext = v.getContext();
 
         }
-//        @Override
-//        public void onClick(View v) {
-//            Log.v("clicked","true");
-//        }
-
-//        @Override
-//        public boolean onLongClick(View v) {
-//            if (TopicActivity.isAdmin) {
-//                Log.d("Long Pressed", "true");
-//
-//
-//            }
-//            Log.v("Long Pressed","true");
-//            return true;
-//        }
     }
 
 
@@ -157,6 +141,7 @@ public class ArticleAdapter extends RecyclerView.Adapter<ArticleAdapter.ViewHold
                         holder.itemView.setAlpha(article.isSelected()?0.4f:1.0f);
                         holder.itemView.setBackgroundColor(article.isSelected()?Color.parseColor("#872f93ff"):Color.TRANSPARENT);
                         TopicActivity.deleteArticleIds.add(articles.get(position).get_id());
+                        TopicActivity.deletePositions.add(position);
                     }else {
                         Log.v("selected status","Normal");
                     }
@@ -171,6 +156,7 @@ public class ArticleAdapter extends RecyclerView.Adapter<ArticleAdapter.ViewHold
                         holder.itemView.setAlpha(article.isSelected()?0.4f:1.0f);
                         holder.itemView.setBackgroundColor(article.isSelected()?Color.parseColor("#872f93ff"):Color.TRANSPARENT);
                         TopicActivity.deleteArticleIds.add(articles.get(position).get_id());
+                        TopicActivity.deletePositions.add(position);
                         new TopicActivity().onLongPressedArticle();
                         return true;
                     }
@@ -217,6 +203,7 @@ public class ArticleAdapter extends RecyclerView.Adapter<ArticleAdapter.ViewHold
                         holder.itemView.setAlpha(article.isSelected()?0.4f:1.0f);
                         holder.itemView.setBackgroundColor(article.isSelected()?Color.parseColor("#872f93ff"):Color.TRANSPARENT);
                         TopicActivity.deleteArticleIds.add(articles.get(position).get_id());
+                        TopicActivity.deletePositions.add(position);
                     }else {
                         Log.v("selected status","Normal");
                     }
@@ -231,6 +218,7 @@ public class ArticleAdapter extends RecyclerView.Adapter<ArticleAdapter.ViewHold
                         holder.itemView.setAlpha(article.isSelected()?0.4f:1.0f);
                         holder.itemView.setBackgroundColor(article.isSelected()?Color.parseColor("#872f93ff"):Color.TRANSPARENT);
                         TopicActivity.deleteArticleIds.add(articles.get(position).get_id());
+                        TopicActivity.deletePositions.add(position);
                         new TopicActivity().onLongPressedArticle();
                         return true;
                     }

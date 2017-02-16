@@ -64,6 +64,7 @@ public class showUsersOrGroupsActivity extends AppCompatActivity {
         chittichatServices = retrofit.create(ChittichatServices.class);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setVisibility(View.GONE);
         recyclerView = (RecyclerView) findViewById(R.id.searched_results_recycler_view);
         recyclerView.setHasFixedSize(true);
         layoutManager = new LinearLayoutManager(this);
@@ -106,7 +107,10 @@ public class showUsersOrGroupsActivity extends AppCompatActivity {
             case R.id.action_follow:
                 followGroups();
                 return true;
-
+            case R.id.action_request:
+                DialogFragment dialogFragment = new GroupAddRequestDialog();
+                dialogFragment.show(getFragmentManager(),"knock_knock");
+                return true;
             default:
                      Toast.makeText(getApplicationContext(),"Does not match any options",Toast.LENGTH_SHORT).show();
         }

@@ -144,7 +144,9 @@ public interface ChittichatServices {
     Observable<List<GroupSearchResult>> getResponseOnSearchGroups(@Body SearchRequest searchRequest);
 
     //Administrative controls urls
-           
+    @GET("deleteArticle/{article_id}")
+    Observable<ResponseMessage> deleteArticle(@Path("article_id") String article_id);
+
     @POST("addMember")
     Observable<ResponseMessage>  getResponseOnAddMember();
 

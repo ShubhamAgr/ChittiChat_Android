@@ -38,8 +38,8 @@ public class ChittichatApp extends Application {
     @Override
     public void onCreate(){
      super.onCreate();
-        baseurl = "http://ec2-35-154-131-124.ap-south-1.compute.amazonaws.com";//"http://ec2-35-160-113-29.us-west-2.compute.amazonaws.com";
-        // "http://192.168.43.91:3000/";
+        baseurl = "http://ec2-35-154-131-124.ap-south-1.compute.amazonaws.com";
+//        baseurl = "http://1204c7bf.ngrok.io";//temp
         chittichatAppInstance = this;
         mainAppComponent = DaggerMainAppComponent.builder().appModule(new AppModule(this)).storageModule(new StorageModule())
                 .netModule(new NetModule(baseurl)).build();

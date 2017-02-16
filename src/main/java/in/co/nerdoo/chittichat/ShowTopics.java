@@ -60,7 +60,7 @@ public class ShowTopics extends AppCompatActivity {
     private RecyclerView.LayoutManager layoutManager;
     private  static TopicAdapter topicAdapter;
     private static Boolean ShowEdittext;
-    public  static boolean isadmin,isInit;
+    public  static boolean isadmin,isInit,isFollowed;
     private ImageButton notification;
     private static TextView notificationCount;
     private static List<Topics> topicsList;
@@ -69,6 +69,7 @@ public class ShowTopics extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_show_topics);
+        isFollowed = true;
         notification = (ImageButton) findViewById(R.id.mynotificationbutton_showtopics);
         notificationCount = (TextView) findViewById(R.id.notificationCount);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_show_topics);
@@ -122,6 +123,7 @@ public class ShowTopics extends AppCompatActivity {
         if(isadmin){
             notification.setVisibility(View.VISIBLE);
             notificationCount.setVisibility(View.VISIBLE);
+            callNotificationCount(groupId);
         }
         callTopics(sharedPreferences.getString("ChittiChat_token","null"),groupId);
 
@@ -191,10 +193,13 @@ public class ShowTopics extends AppCompatActivity {
             joinRoomrequest.put("room_id", groupId);
             joinRoomrequest.put("token",sharedPreferences.getString("ChittiChat_token","null"));
             socket.emit("leaveRoom", joinRoomrequest);
+            Intent intent  = new Intent(this,FirstActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            finish();
+            startActivity(intent);
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        super.onBackPressed();
     }
 
     @Override
@@ -202,6 +207,13 @@ public class ShowTopics extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.menu_show_topics, menu);
         if(!ShowEdittext){
             menu.getItem(0).setVisible(false);
+        }
+        if(isFollowed){
+            menu.getItem(1).setVisible(true);
+            menu.getItem(2).setVisible(false);
+        }else{
+            menu.getItem(2).setVisible(true);
+            menu.getItem(1).setVisible(false);
         }
         return true;
     }
@@ -219,6 +231,9 @@ public class ShowTopics extends AppCompatActivity {
             case R.id.action_unfollow:
                 unfollow();
                 return  true;
+            case R.id.action_follows:
+                followGroups();
+                return true;
             default:
                 Toast.makeText(getApplicationContext(),"Does not match any options",Toast.LENGTH_SHORT).show();
         }
@@ -306,9 +321,30 @@ public class ShowTopics extends AppCompatActivity {
         Observable<ResponseMessage> unfollow = chittichatServices.getResponseOnUnFollowingGroup(sharedPreferences.getString("ChittiChat_token",
                 null),groupId);
         s3 = unfollow.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(responseMessage->{
+           isFollowed = false;
+            invalidateOptionsMenu();
            s3.unsubscribe();
         },throwable -> {
             Log.e("error",throwable.getMessage());
+        });
+    }
+    public void followGroups(){
+        Observable<ResponseMessage> followRequest = chittichatServices.getResponseOnFollowingGroup(sharedPreferences.getString("ChittiChat_token",
+                null),groupId);
+         followRequest.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(responseMessage->{
+            isFollowed = true;
+            invalidateOptionsMenu();
+//            s3.unsubscribe();
+        },throwable -> {
+            if(throwable instanceof HttpException) {
+//                ((HttpException) throwable).code() == 400;
+                Log.e("error",((HttpException) throwable).response().errorBody().toString());
+
+            }
+            if (throwable instanceof IOException) {
+                // A network or conversion error happened
+            }
+//            s3.unsubscribe();
         });
     }
 

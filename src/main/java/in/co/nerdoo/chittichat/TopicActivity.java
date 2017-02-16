@@ -85,6 +85,7 @@ public class TopicActivity extends AppCompatActivity {
     private static ImageButton addPhoto,deleteButton;
     private static ArrayList<String> id;
     public static HashSet<String>  deleteArticleIds;
+    public static HashSet<Integer>  deletePositions;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -100,6 +101,7 @@ public class TopicActivity extends AppCompatActivity {
         ((ChittichatApp) getApplication()).getMainAppComponent().inject(this);
         id = new ArrayList<>();
         deleteArticleIds = new HashSet<>();
+        deletePositions = new HashSet<>();
         Bundle extras = getIntent().getExtras();
         if(extras == null){
             topicId = null;
@@ -488,6 +490,22 @@ public class TopicActivity extends AppCompatActivity {
         });
     }
 
+    private void deleteArticle(String article_id){
+        Observable<ResponseMessage> deleteArticle = chittichatServices.deleteArticle(article_id);
+        deleteArticle.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(responseMessage -> {
+          Log.i("responseOnDelete",responseMessage.getMessage());
+        },throwable -> {
+            if(throwable instanceof HttpException) {
+//                ((HttpException) throwable).code() == 400;
+                Log.e("error",((HttpException) throwable).response().errorBody().toString());
+
+            }
+            if (throwable instanceof IOException) {
+                // A network or conversion error happened
+            }
+            Log.e("error",throwable.getMessage());
+        });
+    }
 
     private void postImage(Uri imageUri){
         String path = getPathFromURI(this,imageUri);
@@ -591,9 +609,15 @@ public class TopicActivity extends AppCompatActivity {
 
     public void onClickDelete(View view){
         Iterator<String> iterator = deleteArticleIds.iterator();
+        Iterator<Integer> iterator1 = deletePositions.iterator();
         while (iterator.hasNext()){
-            Log.d("Article_Delete",iterator.next());
+            deleteArticle(iterator.next());
+            int position = iterator1.next();
+            articlesList.remove(position);
+            articleAdapter.notifyItemRemoved(position);
         }
+        deleteArticleIds.clear();
+        deletePositions.clear();
         deleteButton.setVisibility(View.GONE);
     }
 

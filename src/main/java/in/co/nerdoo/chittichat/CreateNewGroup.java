@@ -173,7 +173,9 @@ public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnI
                             Log.d("abcdefghij",responseOnNewGroup.getGroupId());
                             if (ShareDialog.canShow(ShareLinkContent.class)) {
                                 ShareLinkContent groupcontent = new ShareLinkContent.Builder()
-                                        .setContentTitle("Hello there, Follow my Group \""+group_name.getText().toString()+"\" in ChittiChat")
+                                        .setRef("abcdefgg")
+                                        .setContentDescription("Hello there, Follow my Group \""+group_name.getText().toString()+"\" in ChittiChat")
+                                        .setContentTitle("ChittiChat -Android Application")
                                         .setContentUrl(Uri.parse("https://play.google.com/store/apps/details?id=in.co.nerdoo.com.chittichat.chittichat"))
                                         .build();
                                 //.setContentUrl(Uri.parse("http://developers.facebook.com/android"))//give the link of chittichat application...

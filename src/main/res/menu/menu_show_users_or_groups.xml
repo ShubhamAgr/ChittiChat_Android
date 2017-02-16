@@ -3,8 +3,15 @@
       xmlns:tools="http://schemas.android.com/tools"
       tools:context="in.co.nerdoo.chittichat.showUsersOrGroupsActivity">
     <item
+        android:id="@+id/action_request"
+        android:orderInCategory="100"
+        android:title="Join Group"
+        app:showAsAction="never"/>
+
+    <item
         android:id="@+id/action_follow"
         android:orderInCategory="100"
         android:title="Follow"
         app:showAsAction="never"/>
+
 </menu>

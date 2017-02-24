@@ -39,7 +39,7 @@ import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
 public class showUsersOrGroupsActivity extends AppCompatActivity {
-    private  String groupId,groupName,groupAbout,question;
+    private  String groupId,groupName,groupAbout,question,from;
     TextView knock_knock_Question;
     ImageView groupImage;
     @Inject
@@ -76,6 +76,7 @@ public class showUsersOrGroupsActivity extends AppCompatActivity {
             groupName = "---";
             groupAbout = "---";
             question = "---";
+            from = "search";
         }else{
             groupId = extras.getString("groupId");
             SharedPreferences.Editor  editor = sharedPreferences.edit();
@@ -85,6 +86,7 @@ public class showUsersOrGroupsActivity extends AppCompatActivity {
             toolbar.setTitle(groupName);
             groupAbout = extras.getString("groupAbout");
             question = extras.getString("question");
+            from = extras.getString("from");
         }
         Picasso.with(getApplicationContext()).load(ChittichatApp.getBaseUrl()+"/images/"+groupId).fit().into(groupImage);
         SharedPreferences.Editor  editor = sharedPreferences.edit();
@@ -138,10 +140,14 @@ public class showUsersOrGroupsActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        Intent intent  = new Intent(this,FirstActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        finish();
-        startActivity(intent);
+        super.onBackPressed();
+        if(from.equals("search")){
+            Intent intent  = new Intent(this,FirstActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            finish();
+            startActivity(intent);
+        }
+
     }
 
     public void followGroups(){

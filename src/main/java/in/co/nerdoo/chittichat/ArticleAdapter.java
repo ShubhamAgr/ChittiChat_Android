@@ -26,7 +26,7 @@ public class ArticleAdapter extends RecyclerView.Adapter<ArticleAdapter.ViewHold
     private  final int VIDEO = 2;
     private final int  AUDIO = 3;
     HashSet<Integer> selectedPositions;
-    private  static boolean isAlreadyLongPressed;
+    public static boolean isAlreadyLongPressed;
     public static class ViewHolder extends RecyclerView.ViewHolder{
         private ImageView article_image;
         private TextView article_content;
@@ -112,27 +112,27 @@ public class ArticleAdapter extends RecyclerView.Adapter<ArticleAdapter.ViewHold
                     public void onViewAttachedToWindow(View v) {
                         holder.itemView.setAlpha(article.isSelected()?0.4f:1.0f);
                         holder.itemView.setBackgroundColor(article.isSelected()?Color.parseColor("#872f93ff"):Color.TRANSPARENT);
-                        Log.d("Attched",String.valueOf(position)+"attached");
+
                     }
 
                     @Override
                     public void onViewDetachedFromWindow(View v) {
-                        Log.d("Attched",String.valueOf(position)+"attached");
-                    }
-                });
-                holder.itemView.removeOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
-                    @Override
-                    public void onViewAttachedToWindow(View v) {
-                        holder.itemView.setAlpha(article.isSelected()?0.4f:1.0f);
-                        holder.itemView.setBackgroundColor(article.isSelected()?Color.parseColor("#872f93ff"):Color.TRANSPARENT);
-                        Log.d("Attched",String.valueOf(position)+"attached");
-                    }
 
-                    @Override
-                    public void onViewDetachedFromWindow(View v) {
-                        Log.d("Attched",String.valueOf(position)+"attached");
                     }
                 });
+//                holder.itemView.removeOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+//                    @Override
+//                    public void onViewAttachedToWindow(View v) {
+//                        holder.itemView.setAlpha(article.isSelected()?0.4f:1.0f);
+//                        holder.itemView.setBackgroundColor(article.isSelected()?Color.parseColor("#872f93ff"):Color.TRANSPARENT);
+//
+//                    }
+//
+//                    @Override
+//                    public void onViewDetachedFromWindow(View v) {
+//
+//                    }
+//                });
 
                 holder.itemView.setOnClickListener(v1 -> {
                     Log.d("Position",String.valueOf(position));
@@ -169,12 +169,10 @@ public class ArticleAdapter extends RecyclerView.Adapter<ArticleAdapter.ViewHold
                     public void onViewAttachedToWindow(View v) {
                         holder.itemView.setAlpha(article.isSelected()?0.4f:1.0f);
                         holder.itemView.setBackgroundColor(article.isSelected()?Color.parseColor("#872f93ff"):Color.TRANSPARENT);
-                        Log.d("Attched",String.valueOf(position)+"attached");
                     }
 
                     @Override
                     public void onViewDetachedFromWindow(View v) {
-                        Log.d("Attched",String.valueOf(position)+"attached");
                     }
                 });
                 holder.itemView.removeOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
@@ -182,12 +180,10 @@ public class ArticleAdapter extends RecyclerView.Adapter<ArticleAdapter.ViewHold
                     public void onViewAttachedToWindow(View v) {
                         holder.itemView.setAlpha(article.isSelected()?0.4f:1.0f);
                         holder.itemView.setBackgroundColor(article.isSelected()?Color.parseColor("#872f93ff"):Color.TRANSPARENT);
-                        Log.d("Attched",String.valueOf(position)+"attached");
                     }
 
                     @Override
                     public void onViewDetachedFromWindow(View v) {
-                        Log.d("Attched",String.valueOf(position)+"attached");
                     }
                 });
 

@@ -215,6 +215,10 @@ public class ShowTopics extends AppCompatActivity {
             menu.getItem(2).setVisible(true);
             menu.getItem(1).setVisible(false);
         }
+        if(isadmin){
+            menu.getItem(1).setVisible(false);
+            menu.getItem(2).setVisible(false);
+        }
         return true;
     }
     @Override

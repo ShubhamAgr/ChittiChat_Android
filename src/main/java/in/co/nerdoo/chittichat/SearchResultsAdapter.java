@@ -31,6 +31,7 @@ public class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdap
             intent.putExtra("question",searchLists.get(getPosition()).getKnock_knock_question());
             intent.putExtra("groupName",searchLists.get(getPosition()).getGroup_name());
             intent.putExtra("groupAbout",searchLists.get(getPosition()).getGroup_about());
+            intent.putExtra("from","search");
 //            FirstActivity firstActivity = new FirstActivity();
 //            firstActivity.closeKeyBoard();
             viewContext.startActivity(intent);

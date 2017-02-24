@@ -16,6 +16,8 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
+import android.support.design.widget.TextInputEditText;
+import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -38,6 +40,7 @@ import com.facebook.share.Sharer;
 import com.facebook.share.model.ShareContent;
 import com.facebook.share.model.ShareLinkContent;
 import com.facebook.share.widget.ShareDialog;
+import com.jakewharton.rxbinding.widget.RxTextView;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -46,6 +49,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
@@ -60,6 +64,7 @@ import rx.Observer;
 import rx.Scheduler;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
@@ -77,12 +82,15 @@ public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnI
     private int PIC_CROP = 2;
     Uri uploadImageUri;
     private  static File file;
-    private EditText group_name, group_introduction,knockKnockQuestion;
+    private  static TextInputLayout inputLayout;
+    private  EditText group_name,group_introduction,knockKnockQuestion;
     private static CallbackManager callbackManager;
     private static ShareDialog shareDialog;
     private  static ResponseOnNewGroup myresponse;
     private static ProgressBar progressBar;
     private static RelativeLayout relativeLayout;
+    private  static boolean isAllowed;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -91,10 +99,12 @@ public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnI
         file = null;
         ((ChittichatApp) getApplication()).getMainAppComponent().inject(this);
         group_name=(EditText) findViewById(R.id.group_name);
+        search();
         group_introduction = (EditText) findViewById(R.id.group_introduction);
         knockKnockQuestion = (EditText) findViewById(R.id.knockKnockQuestion);
         relativeLayout = (RelativeLayout) findViewById(R.id.newgrouplayout);
         progressBar = (ProgressBar) findViewById(R.id.progressBar1);
+        inputLayout = (TextInputLayout) findViewById(R.id.groupNameLayout);
         progressBar.setVisibility(View.GONE);
         spinner =  (Spinner) findViewById(R.id.group_category_spinner);
         selectGroupImage = (ImageButton) findViewById(R.id.selectGroupImage);
@@ -113,6 +123,7 @@ public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnI
         arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(arrayAdapter);
         askpermission();
+        chittichatServices = retrofit.create(ChittichatServices.class);
         callbackManager = CallbackManager.Factory.create();
         shareDialog = new ShareDialog(this);
         shareDialog.registerCallback(callbackManager, new FacebookCallback<Sharer.Result>() {
@@ -147,8 +158,6 @@ public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnI
         selectedCategory = "miscellaneous";
     }
     private void requestCreateNewGroup(NewGroupInformation newGroupInformation){
-
-        chittichatServices = retrofit.create(ChittichatServices.class);
 
         Observable<ResponseOnNewGroup> getResponseOnNewGroup = chittichatServices.getResponseOnNewGroup(newGroupInformation);
         subscription_first = getResponseOnNewGroup.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe
@@ -209,7 +218,7 @@ public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnI
         knockKnockQuestion.clearFocus();
         group_name.clearFocus();
         group_introduction.clearFocus();
-        if(!(group_name.getText().toString().equals("") && knockKnockQuestion.getText().toString().equals(""))){
+        if(!(group_name.getText().toString().equals("") && knockKnockQuestion.getText().toString().equals(""))&& isAllowed){
 
             getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
                     WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
@@ -220,9 +229,60 @@ public class CreateNewGroup extends AppCompatActivity implements AdapterView.OnI
                     .getText().toString(),group_introduction.getText().toString(),selectedCategory,knockKnockQuestion.getText().toString());
             requestCreateNewGroup(newGroupInformation);
 
-        }else {
+        }else if(!isAllowed){
+            Toast.makeText(getApplicationContext(),"Error in naming",Toast.LENGTH_SHORT).show();
+        }else{
             Toast.makeText(getApplicationContext(),"Fill All Necessary Content",Toast.LENGTH_SHORT).show();
         }
+
+    }
+
+    private void search(){
+                isAllowed = true;
+
+                RxTextView.textChanges(group_name).subscribeOn(AndroidSchedulers.mainThread()).observeOn(AndroidSchedulers.mainThread()).debounce(300, TimeUnit
+                        .MILLISECONDS)
+                        .map(charSequence
+                -> charSequence
+                .length() >= 3).subscribe(isValid->{
+                    isAllowed = true;
+                    Log.d("isValid",String.valueOf(isValid));
+                    if(isValid){
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                inputLayout.setError("");
+                            }
+
+                        });
+                        getGroupName();
+
+                    }else{
+                        isAllowed = false;
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                inputLayout.setError("Group Name Must contains 3 Letter");
+                            }
+                        });
+                    }
+                },throwable -> {
+                    Log.d("Error",throwable.getMessage());
+                });
+    }
+    private  void getGroupName(){
+         Observable<ResponseMessage> getIsGroupExists = chittichatServices.getGroupsExists(group_name.getText().toString().trim());
+        getIsGroupExists.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(responseMessage -> {
+           Log.d("Response Message",responseMessage.getMessage());
+            if(Boolean.valueOf(responseMessage.getMessage())){
+                isAllowed = false;
+                inputLayout.setError("Group name Already Exists");
+            }else{
+                isAllowed  = true;
+            }
+        },throwable -> {
+            Log.d("error",throwable.getMessage());
+        });
 
     }
 
@@ -543,5 +603,41 @@ class ResponseOnNewGroup{
 
     public void setGroupId(String groupId) {
         this._id = groupId;
+    }
+}
+
+class ShareContentInformation{
+    String ref,content_description,content_title,content_uri;
+
+    public String getRef() {
+        return ref;
+    }
+
+    public void setRef(String ref) {
+        this.ref = ref;
+    }
+
+    public String getContent_description() {
+        return content_description;
+    }
+
+    public void setContent_description(String content_description) {
+        this.content_description = content_description;
+    }
+
+    public String getContent_title() {
+        return content_title;
+    }
+
+    public void setContent_title(String content_title) {
+        this.content_title = content_title;
+    }
+
+    public String getContent_uri() {
+        return content_uri;
+    }
+
+    public void setContent_uri(String content_uri) {
+        this.content_uri = content_uri;
     }
 }

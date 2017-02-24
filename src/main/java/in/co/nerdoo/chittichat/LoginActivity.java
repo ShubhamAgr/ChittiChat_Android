@@ -6,12 +6,15 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.facebook.AccessToken;
@@ -52,6 +55,7 @@ public class LoginActivity extends AppCompatActivity implements ConnectivityReci
     private static ChittichatServices chittichatServices;
     private LoginButton loginWithFacebook;
     private CallbackManager facebookCallbackManager;
+    public static boolean firstTimeUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,7 +67,7 @@ public class LoginActivity extends AppCompatActivity implements ConnectivityReci
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_login);
         ((ChittichatApp) getApplication()).getMainAppComponent().inject(this);
-
+        firstTimeUser = false;
         chittichatServices = retrofit.create(ChittichatServices.class);
         editor = sharedPreferences.edit();
         timer = new Timer();
@@ -169,7 +173,13 @@ public class LoginActivity extends AppCompatActivity implements ConnectivityReci
                 e.printStackTrace();
             }
         }else {
-            Toast.makeText(getApplicationContext(),String.valueOf("Please Check your Internet Connection"),Toast.LENGTH_LONG).show();
+            RelativeLayout relativeLayout = (RelativeLayout) findViewById(R.id.loginLayout);
+            Snackbar snackbar = Snackbar.make(relativeLayout,"No Internet Connection",Snackbar.LENGTH_INDEFINITE)
+                    .setAction("RETRY",view->{
+                        checkConnection();
+                    });
+            snackbar.show();
+//            Toast.makeText(getApplicationContext(),String.valueOf("Please Check your Internet Connection"),Toast.LENGTH_LONG).show();
         }
 
         Log.d("IsConnected",String.valueOf(isConnected));
@@ -247,6 +257,7 @@ public class LoginActivity extends AppCompatActivity implements ConnectivityReci
         final Observable<ResponseMessage> signupUsingFacebookId = chittichatServices.getResponseOnSignupWithFacebook(signupWithFacebookInformation);
         subscription_second = signupUsingFacebookId.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe
                 (responseMessage->{
+                    firstTimeUser = true;
                     Log.d("signup message",responseMessage.getMessage());
                     if (responseMessage.getMessage().equals("something went wrong")) {
                         Log.d("Signup err","Something went wrong");
@@ -256,7 +267,7 @@ public class LoginActivity extends AppCompatActivity implements ConnectivityReci
                         editor.putString("ChittiChat_token", responseMessage.getMessage());
                         editor.apply();
                         Log.d("token", sharedPreferences.getString("ChittiChat_token", null));
-                        Intent intent = new Intent(LoginActivity.this, FirstActivity.class);
+                        Intent intent = new Intent(LoginActivity.this, FindGroups.class);
                         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                         finish();
                         startActivity(intent);
@@ -282,8 +293,19 @@ public class LoginActivity extends AppCompatActivity implements ConnectivityReci
         subscription_fourth = getPreLoginInfo.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(preLoginInfo ->{
             Log.d("forceupdate",String.valueOf(preLoginInfo.force_update));
             if(preLoginInfo.force_update){
-                getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
-                        WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                loginWithFacebook.setClickable(false);
+                RelativeLayout relativeLayout = (RelativeLayout) findViewById(R.id.loginLayout);
+                Snackbar snackbar = Snackbar.make(relativeLayout,"This version is no longer supported",Snackbar.LENGTH_INDEFINITE)
+                        .setAction("Update",view->{
+                            final String appPackageName = getPackageName(); // package name of the app
+                            try {
+                                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
+                            } catch (android.content.ActivityNotFoundException anfe) {
+                                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
+                            }
+                        });
+                snackbar.show();
+
              Toast.makeText(getApplicationContext(),"Please update to new version else application will not work",Toast.LENGTH_LONG).show();
             }else if(Integer.parseInt(preLoginInfo.getCurrent_version_code())-Integer.parseInt(version_code)>0){
                 Toast.makeText(getApplicationContext(),"New Version Available",Toast.LENGTH_SHORT).show();

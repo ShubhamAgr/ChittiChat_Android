@@ -8,7 +8,8 @@
     <!--<color name="colorPrimaryDark">#303F9F</color>-->
     <color name="colorPrimaryDark">#860A2E</color>
     <color name="primary_light">#BBB6DF</color>
-    <color name="colorAccent">#C6C8EE</color>
+    <color name="colorAccent">#d57a66</color>
+    <color name="progressbar">#C6C8EE</color>
     <color name="primary_text">#212121</color>
     <color name="secondary_text">#757575</color>
     <color name="icons">#FFFFFF</color>
@@ -17,6 +18,9 @@
     <color name="black">#000000</color>
     <color name="grey">#F0F0F0</color>
     <color name="back">#FCFCFF</color>
+    <color name="topics_background">#fdfefe</color>
+    <color name="topics_title">#d57a66</color>
+    <color name="topics_introduction">#c2a37f</color>
     <color name="onSelected">#872f93ff</color>
     <color name ="background">#FCFCFF</color>
     <color name ="loading_background">#B0000000</color>

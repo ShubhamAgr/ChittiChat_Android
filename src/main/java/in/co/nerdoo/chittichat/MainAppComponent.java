@@ -26,4 +26,5 @@ public interface MainAppComponent {
     void inject(FollowingGroupFragment followingGroupFragment);
     void inject(MembersGroupFragment membersGroupFragment);
     void inject(SuggestionGroupFragment suggestionGroupFragment);
+    void inject(FindGroups findGroups);
 }

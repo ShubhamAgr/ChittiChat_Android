@@ -15,7 +15,10 @@
         app:titleMarginStart="0dp"
         android:background="?attr/colorPrimary"
         android:theme="@style/AppTheme.AppBarOverlay"
-        app:popupTheme="@style/AppTheme.PopupOverlay">
+        app:popupTheme="@style/AppTheme.PopupOverlay"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true">
            <ImageButton
                 android:layout_height="?attr/actionBarSize"
                 android:layout_width="wrap_content"
@@ -81,15 +84,25 @@
 
     </LinearLayout>
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/articles_recycler_view"
+
+
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:clipToPadding="false"
-        android:scrollbars="vertical"
+        android:layout_height="match_parent"
         android:layout_below="@+id/toolbar_articles"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_above="@+id/linearLayout2"/>
+        android:layout_centerHorizontal="true"
+        android:gravity="bottom"
+        android:layout_above="@+id/linearLayout2">
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/articles_recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipToPadding="false"
+            android:scrollbars="vertical"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_above="@+id/linearLayout2"/>
+    </LinearLayout>
 
 </RelativeLayout>

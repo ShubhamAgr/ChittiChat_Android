@@ -4,6 +4,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.Application;
 import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
@@ -26,6 +27,7 @@ import android.support.v7.widget.Toolbar;
 
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -37,9 +39,12 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.TreeSet;
 
 import javax.inject.Inject;
 
@@ -95,7 +100,7 @@ public class TopicActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_articles);
         addPhoto = (ImageButton) findViewById(R.id.myaddphotbutton);
         deleteButton = (ImageButton) findViewById(R.id.deletebutton);
-        toolbar.setTitle("Chats");
+        toolbar.setTitle("Conversation");
         toolbar.showOverflowMenu();
         setSupportActionBar(toolbar);
         ((ChittichatApp) getApplication()).getMainAppComponent().inject(this);
@@ -140,12 +145,9 @@ public class TopicActivity extends AppCompatActivity {
             }catch (JSONException je){
                 Log.e("Exception_Authorization",je.getMessage());
             }
-
-
-
         chittichatServices = retrofit.create(ChittichatServices.class);
         recyclerView = (RecyclerView) findViewById(R.id.articles_recycler_view);
-        recyclerView.setHasFixedSize(true);
+        recyclerView.setHasFixedSize(false);
         recyclerView.setItemAnimator(null);
         manager = new LinearLayoutManager(this);
         manager.setStackFromEnd(true);
@@ -155,7 +157,7 @@ public class TopicActivity extends AppCompatActivity {
         isLoading =   true;
         isEmpty = false;
         initialItem = 0;
-        finalItem = 10;
+        finalItem = 12;
         getInitialArticle(token,topicId,initialItem+"_"+finalItem);
 
     }
@@ -252,17 +254,19 @@ public class TopicActivity extends AppCompatActivity {
 
             Observable<List<Articles>> getInitialArticles = chittichatServices.getResponseOnArticles(token,topicId,range);
             s1 = getInitialArticles.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(articles->{
+
                 if(articles.isEmpty()){
                     isEmpty = true;
                 }
                 articlesList = articles;
+                Log.d("articleSize",String.valueOf(articlesList.size()));
                 articleAdapter = new ArticleAdapter(articlesList);
                 recyclerView.setAdapter(articleAdapter);
                 recyclerView.scrollToPosition(0);
-                s1.unsubscribe();
                 initialItem = finalItem+1;
-                finalItem +=10;
+                finalItem +=12;
                 isLoading = false;
+                s1.unsubscribe();
             },throwable -> {
                 if(throwable instanceof HttpException) {
 //                ((HttpException) throwable).code() == 400;
@@ -283,17 +287,19 @@ public class TopicActivity extends AppCompatActivity {
 
             Observable<List<Articles>> getArticles = chittichatServices.getResponseOnArticles(token,topicId,range);
             s2 = getArticles.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(articles->{
-                if(articles.isEmpty()){
+                Log.d("articleSize",String.valueOf(articles.size())+String.valueOf(articles.size()%10 != 0));
+                if(articles.isEmpty() || articles.size()%12 != 0){
                     isEmpty = true;
                 }
-
                 Parcelable recyclerViewState;
                 recyclerViewState = recyclerView.getLayoutManager().onSaveInstanceState();
-                    articlesList.addAll(articles);
-                    articleAdapter.notifyDataSetChanged();
-                    recyclerView.getLayoutManager().onRestoreInstanceState(recyclerViewState);
+//                articlesList = articles;
+                articlesList.addAll(articles);
+
+                articleAdapter.notifyItemRangeInserted(initialItem,articles.size());
+                recyclerView.getLayoutManager().onRestoreInstanceState(recyclerViewState);
                 initialItem = finalItem+1;
-                finalItem +=10;
+                finalItem +=12;
                 isLoading = false;
                 s2.unsubscribe();
             },throwable -> {
@@ -322,8 +328,7 @@ public class TopicActivity extends AppCompatActivity {
                 }else {
                     articlesList = articles;
                 }
-
-                articleAdapter.notifyDataSetChanged();
+                articleAdapter.notifyItemInserted(0);
                 s3.unsubscribe();
             },throwable -> {
                 if(throwable instanceof HttpException) {
@@ -610,14 +615,20 @@ public class TopicActivity extends AppCompatActivity {
     public void onClickDelete(View view){
         Iterator<String> iterator = deleteArticleIds.iterator();
         Iterator<Integer> iterator1 = deletePositions.iterator();
+        TreeSet<Integer> treeSet = new TreeSet<>(Collections.reverseOrder());
+        treeSet.addAll(deletePositions);
+        Iterator<Integer> iterator2 = treeSet.iterator();
         while (iterator.hasNext()){
             deleteArticle(iterator.next());
-            int position = iterator1.next();
+            int position = iterator2.next();
             articlesList.remove(position);
             articleAdapter.notifyItemRemoved(position);
         }
         deleteArticleIds.clear();
         deletePositions.clear();
+        treeSet.clear();
+        articleAdapter.notifyDataSetChanged();
+        ArticleAdapter.isAlreadyLongPressed = false;
         deleteButton.setVisibility(View.GONE);
     }
 
@@ -631,8 +642,7 @@ public class TopicActivity extends AppCompatActivity {
             Log.d("texts",text);
             ArticleInformation articleInformation = new ArticleInformation(token,topicId,sharedPreferences.getString("first_name","unknown"),text);
             postArticle(articleInformation);
-
-
+            recyclerView.scrollToPosition(0);
         }
 
     }
@@ -650,19 +660,13 @@ public class TopicActivity extends AppCompatActivity {
             int totalItemCount = manager.getItemCount();
             int firstVisibleItem = manager.findFirstVisibleItemPosition();
             int lastVisibleItem = manager.findLastVisibleItemPosition();
-            Log.d("visible item",visibleItemCount+" "+totalItemCount+" "+firstVisibleItem+" "+lastVisibleItem);
             if(!isLoading && !isEmpty){
-                Log.d("condition",String.valueOf(totalItemCount-lastVisibleItem));
-                if ((visibleItemCount + firstVisibleItem) >= totalItemCount && firstVisibleItem >= 0)//
-               // &&
-               // totalItemCount >= PAGE_SIZE)
+                if ((visibleItemCount + firstVisibleItem) >= totalItemCount && firstVisibleItem >=0 && lastVisibleItem >= initialItem-5 )//0)//
                 {
                     TopicActivity.isLoading = true;
 
-                    getArticle(token,topicId,initialItem+"_"+finalItem);//((lastVisibleItem+1)+"_"+(lastVisibleItem+PAGE_SIZE)));
+                    getArticle(token,topicId,initialItem+"_"+finalItem);
                 }
-            }else{
-                Log.d("maybe","Loading");
             }
         }
     };

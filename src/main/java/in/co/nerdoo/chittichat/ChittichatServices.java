@@ -42,11 +42,19 @@ public interface ChittichatServices {
     @GET("getCurrentVersionCode/{version_code}")
     Observable<PreLogin> getVersionCode(@Path("version_code") String version_code);
 
+    @GET("getSharingInfo")
+    Observable<ShareContentInformation> getSharingInfo();
     //Groups Related Urls
+
 
     @POST("/newGroup")
     Observable<ResponseOnNewGroup> getResponseOnNewGroup(@Body NewGroupInformation newGroupInformation);
 
+    @GET("/getGroupExists/{group_name}")
+    Observable<ResponseMessage> getGroupsExists(@Path("group_name") String group_name);
+
+    @GET("/getGroups/{range}")
+    Observable<List<Groups>> getGroups(@Path("range") String range);
     @GET("/groups/{token}")
     Observable<List<GroupsList>> getResponseOnGroups(@Path("token") String token);
 
